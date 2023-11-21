@@ -14,13 +14,13 @@ BOOL Menu(INT, HWND);
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 
 	//Inizialisación
-	HWND hWindow = CreateDialogW(hInst, MAKEINTRESOURCE(DLG_LOGIN), NULL, LoginCallback);
+	HWND hWindow = CreateDialog(hInst, MAKEINTRESOURCE(DLG_LOGIN), NULL, LoginCallback);
 	MSG Msg;
 	ZeroMemory(&Msg, sizeof(Msg));
 
 	// Ventana y ciclo de mensajes
 	ShowWindow(hWindow, cShow);
-	while (GetMessage(&Msg, hWindow, NULL, NULL)) {
+	while (GetMessage(&Msg, nullptr, NULL, NULL)) {
 		TranslateMessage(&Msg);
 		DispatchMessage(&Msg);
 	}
@@ -76,9 +76,6 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 		switch (ID) {
 			// Casos de Citas
-			case BTN_NUEVA:{
-
-			}break;
 		}
 	}break;
 	}
@@ -99,21 +96,35 @@ LRESULT CALLBACK PerfilCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 	}
 	return FALSE;
 }
-BOOL Menu(INT opcion, HWND window) {
+BOOL Menu(INT opcion, HWND window0) {
 	switch (opcion) {
-		case MENU_AGENDA: {
-			HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA), NULL, AgendaCallback);
-			ShowWindow(window, SW_SHOW);
+		case MENU_AGENDA: {		
+			DestroyWindow(window0);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA), NULL, AgendaCallback);
+			ShowWindow(window1, 5);
 		}break;
-		case MENU_CITAS: {
-			HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS), NULL, CitasCallback);
-			ShowWindow(window, SW_SHOW);
+		case MENU_CITAS_NUEVA: {
+			DestroyWindow(window0);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_NUEVA), NULL, CitasCallback);
+			ShowWindow(window1, SW_SHOW);
+		}break;
+		case MENU_CITAS_MODIFICAR: {
+			DestroyWindow(window0);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_MODIFICAR), NULL, CitasCallback);
+			ShowWindow(window1, SW_SHOW);
+		}break;
+		case MENU_CITAS_ELIMINAR: {
+			DestroyWindow(window0);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_ELIMINAR), NULL, CitasCallback);
+			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_PERFIL: {
-			HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_PERFIL), NULL, PerfilCallback);
-			ShowWindow(window, SW_SHOW);
+			DestroyWindow(window0);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_PERFIL), NULL, PerfilCallback);
+			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_SALIR: {
+
 			PostQuitMessage(0);
 		}break;
 		default: return FALSE;
