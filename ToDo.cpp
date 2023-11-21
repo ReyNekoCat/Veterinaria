@@ -1,9 +1,9 @@
 /*
-LOGIN
+ LOGIN
  - Cada médico puede con su clave de usuario y contraseña
  - Un usuario administrador que pueda crear más cuentas
 
-MENU [Disponible en todas las pantallas]
+ MENU [Disponible en todas las pantallas]
  - Información de doctor que se conectó al programa
  - Manejo de Citas
  - Agenda

@@ -1,6 +1,44 @@
 #include <Windows.h>
 #include <iostream>
+#include <oleauto.h> // Librería para administrar fechas
 #include "resource.h"
+
+struct VETERINARIO {
+	char Nombre[100];
+	int Cedula;
+	int Clave;
+	char FotoRuta[200];
+	char Password;
+};
+struct NODOVET {
+	VETERINARIO* Dato;
+	NODOVET* Siguiente;
+	NODOVET* Anterior;
+};
+struct VETERINARIOS {
+	NODOVET* Origen;
+	NODOVET* Fin;
+}LISTAVET;
+struct CITA {
+	int ClaveVet;
+	float Fecha;
+	char NombreCliente[100];
+	int Telefono;
+	int Especie;
+	char NombreMascota[30];
+	char Motivo[500];
+	int Estatus;
+	float Costo;
+};
+struct NODOCITA {
+	CITA* Dato;
+	NODOCITA* Siguiente;
+	NODOCITA* Anterior;
+};
+struct CITAS {
+	NODOCITA* Origen;
+	NODOCITA* Fin;
+}LISTACITA;
 
 HINSTANCE hInst;  // Instancia actual
 
@@ -8,12 +46,19 @@ LRESULT CALLBACK LoginCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK AgendaCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK CitasCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK PerfilCallback(HWND, UINT, WPARAM, LPARAM);
-
 BOOL Menu(INT, HWND);
+
+VETERINARIO* crearVet(char, int, int, char, char);
+NODOVET* nuevoNodoVet(VETERINARIO*);
+void agregarVetFinal(VETERINARIO*);
+NODOVET* buscarClave(int);
+CITA* crearCita(int, float, char, int, int, char, char, int, float);
+NODOCITA* nuevoNodoCita(CITA*);
+void agregarCita(CITA*);
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 
-	//Inizialisación
+	//Inicialización
 	HWND hWindow = CreateDialog(hInst, MAKEINTRESOURCE(DLG_LOGIN), NULL, LoginCallback);
 	MSG Msg;
 	ZeroMemory(&Msg, sizeof(Msg));
@@ -129,4 +174,101 @@ BOOL Menu(INT opcion, HWND window0) {
 		}break;
 		default: return FALSE;
 	}return TRUE;
+}
+
+VETERINARIO* crearVet(char nombre, int cedula, int clave, char fotoRuta, char password) {
+	VETERINARIO* nuevo = new VETERINARIO;
+	strcpy_s(nuevo->Nombre, 100, &nombre);
+	nuevo->Cedula = cedula;
+	nuevo->Clave = clave;
+	strcpy_s(nuevo->FotoRuta, 200, &fotoRuta);
+	nuevo->Password = password;
+	return nuevo;
+}
+NODOVET* nuevoNodoVet(VETERINARIO* dato) {
+	NODOVET* nodo = new NODOVET;
+	nodo->Dato = dato;
+	nodo->Siguiente = NULL;
+	nodo->Anterior = NULL;
+	return nodo;
+}
+void agregarVetFinal(VETERINARIO* dato) {
+	NODOVET* nodo = nuevoNodoVet(dato);
+	if (LISTAVET.Origen == NULL) {
+		LISTAVET.Origen = nodo;
+		LISTAVET.Fin = nodo;
+		nodo->Siguiente = NULL;
+		nodo->Anterior = NULL;
+	}
+	else {
+		LISTAVET.Fin->Siguiente = nodo;
+		nodo->Anterior = LISTAVET.Fin;
+		nodo->Siguiente = NULL;
+		LISTAVET.Fin = nodo;		
+	}
+}
+NODOVET* buscarClave(int buscar) {
+	if (LISTAVET.Origen == NULL)
+		return NULL;
+	NODOVET* indice = LISTAVET.Origen;
+
+	while (indice != NULL) {
+		if (indice->Dato->Clave == buscar)
+			break;
+		indice = indice->Siguiente;
+	}
+	return indice;
+}
+CITA* crearCita(int claveVet, float fecha, char nombreCliente, int telefono, int especie, char nombreMascota, char motivo, int estatus, float costo){
+	CITA* nuevo = new CITA;
+	nuevo->ClaveVet = claveVet;
+	nuevo->Fecha = fecha;
+	strcpy_s(nuevo->NombreCliente, 100, &nombreCliente);	
+	nuevo->Telefono = telefono;
+	nuevo->Especie = especie;
+	strcpy_s(nuevo->NombreMascota, 30, &nombreMascota);
+	strcpy_s(nuevo->Motivo, 500, &motivo);
+	nuevo->Estatus = estatus;
+	nuevo->Costo = costo;
+	return nuevo;
+}
+NODOCITA* nuevoNodoCita(CITA* dato) {
+	NODOCITA* nodo = new NODOCITA;
+	nodo->Dato = dato;
+	nodo->Siguiente = NULL;
+	nodo->Anterior = NULL;
+	return nodo;
+}
+void agregarCita(CITA* dato) {
+	NODOCITA* nodo = nuevoNodoCita(dato);
+	if (LISTACITA.Origen == NULL) {
+		LISTACITA.Origen = nodo;
+		LISTACITA.Fin = nodo;
+		nodo->Siguiente = NULL;
+		nodo->Anterior = NULL;
+	}
+	else if (nodo->Dato->Fecha < LISTACITA.Origen->Dato->Fecha) {
+		nodo->Siguiente = LISTACITA.Origen;
+		nodo->Anterior = NULL;
+		LISTACITA.Origen->Anterior = nodo;
+		LISTACITA.Origen = nodo;
+	}
+	else if (nodo->Dato->Fecha > LISTACITA.Fin->Dato->Fecha) {
+		nodo->Anterior = LISTACITA.Fin;
+		nodo->Siguiente = NULL;
+		LISTACITA.Fin->Siguiente = nodo;
+		LISTACITA.Fin = nodo;
+	}
+	else {
+		NODOCITA* temp = LISTACITA.Origen;
+		while (temp != NULL) {
+			if (nodo->Dato->Fecha > temp->Dato->Fecha && nodo->Dato->Fecha < temp->Siguiente->Dato->Fecha)
+				break;
+			temp = temp->Siguiente;
+		}
+		nodo->Anterior = temp;
+		nodo->Siguiente = temp->Siguiente;
+		temp->Siguiente->Anterior = nodo;
+		temp->Siguiente = nodo;
+	}
 }
