@@ -154,6 +154,10 @@ LRESULT CALLBACK PerfilCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		switch (ID) {
 			// Casos de Perfil	
+		
+
+
+
 		}
 	}break;
 	}
