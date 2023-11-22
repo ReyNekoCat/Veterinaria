@@ -134,8 +134,6 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			}
 
 		}
-
-
 		switch (ID) {
 			// Casos de Citas
 
