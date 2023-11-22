@@ -53,16 +53,16 @@
 #define BTN_AGENDA_MODIFICAR            1038
 #define BTN_AGENDA_ELIMINAR             1039
 #define BTN_PERFIL_CREAR                1040
+#define BTN_AGENDA_MODIFICAR2           1040
+#define BTN_AGENDA_RANGO                1040
 #define DTP_RANGO_DIA1                  1041
 #define DTP_RANGO_HORA1                 1042
 #define DTP_RANGO_DIA2                  1043
+#define EDIT_DIRECCION                  1043
 #define DTP_RANGO_HORA2                 1044
 #define IDC_COMBO1                      1045
 #define CB_RANGO                        1045
-#define BTN_AGENDA_MODIFICAR2           1040
-#define BTN_AGENDA_RANGO                1040
-#define IDC_EXAMINAR                    1040
-#define IDC_DIRECCION                   1041
+#define BTN_SEARCH                      1045
 #define MENU_AGENDA                     40001
 #define MENU_CITAS                      40002
 #define MENU_PERFIL                     40003
@@ -79,12 +79,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        114
-#define _APS_NEXT_COMMAND_VALUE         40030
-#define _APS_NEXT_CONTROL_VALUE         1046
 #define _APS_NEXT_RESOURCE_VALUE        110
 #define _APS_NEXT_COMMAND_VALUE         40020
-#define _APS_NEXT_CONTROL_VALUE         1042
+#define _APS_NEXT_CONTROL_VALUE         1044
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
