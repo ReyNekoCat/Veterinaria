@@ -80,7 +80,7 @@ LRESULT CALLBACK LoginCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			switch (ID) {
 					// Casos de Login
 				case BTN_LOGIN: {
-					HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA), NULL, AgendaCallback);
+					HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORFECHA), NULL, AgendaCallback);
 					ShowWindow(window, SW_SHOW);
 					EndDialog(hwnd, 0);
 				}break;
@@ -163,10 +163,15 @@ LRESULT CALLBACK PerfilCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 }
 BOOL Menu(INT opcion, HWND window0) {
 	switch (opcion) {
-		case MENU_AGENDA: {		
+		case MENU_AGENDA_PORFECHA: {		
 			DestroyWindow(window0);
-			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA), NULL, AgendaCallback);
-			ShowWindow(window1, 5);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORFECHA), NULL, AgendaCallback);
+			ShowWindow(window1, SW_SHOW);
+		}break;
+		case MENU_AGENDA_PORRANGO: {
+			DestroyWindow(window0);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORRANGO), NULL, AgendaCallback);
+			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_CITAS_NUEVA: {
 			DestroyWindow(window0);
@@ -183,13 +188,17 @@ BOOL Menu(INT opcion, HWND window0) {
 			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_ELIMINAR), NULL, CitasCallback);
 			ShowWindow(window1, SW_SHOW);
 		}break;
-		case MENU_PERFIL: {
+		case MENU_PERFIL_MODIFICAR: {
 			DestroyWindow(window0);
-			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_PERFIL), NULL, PerfilCallback);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_PERFIL_MODIFICAR), NULL, PerfilCallback);
+			ShowWindow(window1, SW_SHOW);
+		}break;
+		case MENU_PERFIL_CREAR: {
+			DestroyWindow(window0);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_PERFIL_CREAR), NULL, PerfilCallback);
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_SALIR: {
-
 			PostQuitMessage(0);
 		}break;
 		default: return FALSE;

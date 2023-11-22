@@ -3,18 +3,21 @@
 // Usado por Veterinaria.rc
 //
 #define DLG_LOGIN                       101
-#define DLG_AGENDA                      102
-#define DLG_CITAS                       103
+#define DLG_AGENDA_PORFECHA             102
 #define DLG_CITAS_CREAR                 103
 #define DLG_CITAS_NUEVA                 103
-#define DLG_PERFIL                      104
-#define IDR_MENU1                       105
+#define DLG_PERFIL_MODIFICAR            104
 #define DLG_CITAS_MODIFICAR             105
-#define IDR_MENU2                       106
-#define DLG_CITAS_ELIMINAR              106
-#define IDR_MENU2_1                     106
-#define IDR_MENU2_2                     108
-#define IDR_MENU2_3                     109
+#define IDR_MENU1_1                     106
+#define DLG_CITAS_ELIMINAR              107
+#define IDR_MENU2_1                     108
+#define DLG_PERFIL_CREAR                109
+#define IDR_MENU2_2                     110
+#define DLG_AGENDA_PORRANGO             111
+#define IDR_MENU2_3                     112
+#define IDR_MENU3_2                     113
+#define IDR_MENU3_1                     114
+#define IDR_MENU1_2                     115
 #define EDIT_NAME                       1001
 #define EDIT_LOGIN_CLAVE                1001
 #define EDIT_PASSWORD                   1002
@@ -47,9 +50,15 @@
 #define CB_ELIMINAR_HORA                1031
 #define CB_MODIFICAR_HORA               1032
 #define CB_AGENDA_HORA                  1034
-#define BTN_PERFIL_CREAR                1036
 #define BTN_AGENDA_MODIFICAR            1038
 #define BTN_AGENDA_ELIMINAR             1039
+#define BTN_PERFIL_CREAR                1040
+#define DTP_RANGO_DIA1                  1041
+#define DTP_RANGO_HORA1                 1042
+#define DTP_RANGO_DIA2                  1043
+#define DTP_RANGO_HORA2                 1044
+#define IDC_COMBO1                      1045
+#define CB_RANGO                        1045
 #define BTN_AGENDA_MODIFICAR2           1040
 #define BTN_AGENDA_RANGO                1040
 #define IDC_EXAMINAR                    1040
@@ -61,11 +70,18 @@
 #define MENU_CITAS_NUEVA                40017
 #define MENU_CITAS_MODIFICAR            40018
 #define MENU_CITAS_ELIMINAR             40019
+#define MENU_PERFIL_MODIFICAR           40025
+#define MENU_PERFIL_CREAR               40026
+#define MENU_AGENDA_PORFECHA            40027
+#define MENU_AGENDA_PORRANGO            40028
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
+#define _APS_NEXT_RESOURCE_VALUE        114
+#define _APS_NEXT_COMMAND_VALUE         40030
+#define _APS_NEXT_CONTROL_VALUE         1046
 #define _APS_NEXT_RESOURCE_VALUE        110
 #define _APS_NEXT_COMMAND_VALUE         40020
 #define _APS_NEXT_CONTROL_VALUE         1042
