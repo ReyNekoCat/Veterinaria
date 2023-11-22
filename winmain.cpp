@@ -118,9 +118,29 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		int ID = LOWORD(wParam);
 		if (Menu(ID, hwnd))
 			return FALSE;
+		if (LOWORD(wParam) == BTN_CREAR && HIWORD(wParam) == BN_CLICKED) {
+			HWND hName = GetDlgItem(hwnd, EDIT_NOMBRE);
+			int iTextLength = GetWindowTextLength(hName);
+			char name[100];
+			GetWindowText(hName, (LPWSTR)name, iTextLength+1);
+			
+			if (iTextLength < 1) {
+				MessageBox(NULL, L"Ingresa datos", L"Error", MB_OK);
+			}
+			else {
+				//codigo para guardar la info
+
+				MessageBox(NULL, (LPWSTR)name, L"Error", MB_OK);
+			}
+
+		}
+
 
 		switch (ID) {
 			// Casos de Citas
+
+
+
 		}
 	}break;
 	}

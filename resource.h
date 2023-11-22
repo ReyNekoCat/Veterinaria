@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
-// Used by Veterinaria.rc
+// Archivo de inclusión generado de Microsoft Visual C++.
+// Usado por Veterinaria.rc
 //
 #define DLG_LOGIN                       101
 #define DLG_AGENDA                      102
@@ -52,6 +52,8 @@
 #define BTN_AGENDA_ELIMINAR             1039
 #define BTN_AGENDA_MODIFICAR2           1040
 #define BTN_AGENDA_RANGO                1040
+#define IDC_EXAMINAR                    1040
+#define IDC_DIRECCION                   1041
 #define MENU_AGENDA                     40001
 #define MENU_CITAS                      40002
 #define MENU_PERFIL                     40003
@@ -66,7 +68,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        110
 #define _APS_NEXT_COMMAND_VALUE         40020
-#define _APS_NEXT_CONTROL_VALUE         1040
+#define _APS_NEXT_CONTROL_VALUE         1042
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
