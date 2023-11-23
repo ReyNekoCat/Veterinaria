@@ -49,7 +49,7 @@ LRESULT CALLBACK CitasCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK PerfilCallback(HWND, UINT, WPARAM, LPARAM);
 BOOL Menu(INT, HWND);
 
-VETERINARIO* crearVet(char, int, int, char, char);
+VETERINARIO* crearVet(char*, int, int, char*, char*);
 NODOVET* nuevoNodoVet(VETERINARIO*);
 void agregarVetFinal(VETERINARIO*);
 NODOVET* buscarPorClave(int);
@@ -67,7 +67,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 	LISTAVET.Fin = NULL;
 	LISTACITA.Origen = NULL;
 	LISTACITA.Fin = NULL;
-	agregarVetFinal(crearVet((char)"Administrador", 0000000, 001, NULL, (char)"Admin")); // Recasteo solo para que no de error
+	agregarVetFinal(crearVet((char*)"Administrador", 0000000, 001, (char*)"X", (char*)"Admin")); // Recasteo solo para que no de error
 
 	// Ventana y ciclo de mensajes
 	ShowWindow(hWindow, cShow);
@@ -97,7 +97,7 @@ LRESULT CALLBACK LoginCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 						//strcpy_s((char*)VetPassword, 20, Busqueda->Dato->Password);
 
 						MessageBox(hwnd, Busqueda->Dato->Password, wPassword, MB_OK);
-						if (Busqueda->Dato->Password == wPassword) {
+						if (strcmp(Busqueda->Dato->Password, wPassword) == 0){
 							ActiveVet = Busqueda->Dato->Clave;
 							HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORFECHA), NULL, AgendaCallback);
 							ShowWindow(window, SW_SHOW);
@@ -234,13 +234,13 @@ BOOL Menu(INT opcion, HWND window0) {
 	}return TRUE;
 }
 
-VETERINARIO* crearVet(char nombre, int cedula, int clave, char fotoRuta, char password) { // Debería usar char*?
+VETERINARIO* crearVet(char* nombre, int cedula, int clave, char* fotoRuta, char* password) { // Debería usar char*?
 	VETERINARIO* nuevo = new VETERINARIO;
-	strcpy_s(nuevo->Nombre, 100, &nombre);
+	strcpy_s(nuevo->Nombre, 100, nombre);
 	nuevo->Cedula = cedula;
 	nuevo->Clave = clave;
-	strcpy_s(nuevo->FotoRuta, 200, &fotoRuta);
-	strcpy_s(nuevo->Password, 20, &password); // Se estará asignando todo esto bien?
+	strcpy_s(nuevo->FotoRuta, 200, fotoRuta);
+	strcpy_s(nuevo->Password, 20, password); // Se estará asignando todo esto bien?
 	return nuevo;
 }
 NODOVET* nuevoNodoVet(VETERINARIO* dato) {
