@@ -88,21 +88,21 @@ LRESULT CALLBACK LoginCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 				case BTN_LOGIN: {
 
 					NODOVET* Busqueda = buscarPorClave(GetDlgItemInt(hwnd, EDIT_LOGIN_CLAVE, 0, 0));
-					HWND hPassword = GetDlgItem(hwnd, EDIT_LOGIN_PASSWORD);
-					WCHAR wPassword[20];
-					GetDlgItemText(hwnd, EDIT_LOGIN_PASSWORD, wPassword, 20);
-					char VetPassword[20];
-					strcpy_s(VetPassword, 20, Busqueda->Dato->Password);
+					if (Busqueda != NULL) {
 
-					if (Busqueda->Dato->Clave != NULL) {
+						HWND hPassword = GetDlgItem(hwnd, EDIT_LOGIN_PASSWORD);
+						WCHAR wPassword[20];
+						GetDlgItemText(hwnd, EDIT_LOGIN_PASSWORD, wPassword, 20);
+						char VetPassword[20];
+						strcpy_s(VetPassword, 20, Busqueda->Dato->Password);
+
 						ActiveVet = Busqueda->Dato->Clave;
 
 						HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORFECHA), NULL, AgendaCallback);
 						ShowWindow(window, SW_SHOW);
 						EndDialog(hwnd, 0);
-						
-					}
-					
+					}else
+						MessageBox(hwnd, L"Ingrese un usuario válido", L"No se encontró el usuario", MB_OK);
 				}break;
 				case WM_CLOSE:
 				case WM_DESTROY: {
@@ -273,6 +273,7 @@ NODOVET* buscarPorClave(int buscar) {
 		}			
 		indice = indice->Siguiente;
 	}
+	return NULL;
 }	
 CITA* crearCita(int claveVet, float fecha, char nombreCliente, int telefono, int especie, char nombreMascota, char motivo, int estatus, float costo){
 	CITA* nuevo = new CITA;
