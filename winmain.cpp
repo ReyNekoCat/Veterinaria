@@ -67,7 +67,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 	LISTAVET.Fin = NULL;
 	LISTACITA.Origen = NULL;
 	LISTACITA.Fin = NULL;
-	agregarVetFinal(crearVet((char)"Administrador", 0000000, 001, NULL, (char)"A"));
+	agregarVetFinal(crearVet((char)"Administrador", 0000000, 001, NULL, (char)"Admin")); // Recasteo solo para que no de error
 
 	// Ventana y ciclo de mensajes
 	ShowWindow(hWindow, cShow);
@@ -91,22 +91,26 @@ LRESULT CALLBACK LoginCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 					if (Busqueda != NULL) {
 
 						HWND hPassword = GetDlgItem(hwnd, EDIT_LOGIN_PASSWORD);
-						WCHAR wPassword[20];
+						char wPassword[20];
 						GetDlgItemText(hwnd, EDIT_LOGIN_PASSWORD, wPassword, 20);
 						char VetPassword[20];
-						strcpy_s(VetPassword, 20, Busqueda->Dato->Password);
+						//strcpy_s((char*)VetPassword, 20, Busqueda->Dato->Password);
 
-						ActiveVet = Busqueda->Dato->Clave;
-
-						HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORFECHA), NULL, AgendaCallback);
-						ShowWindow(window, SW_SHOW);
-						EndDialog(hwnd, 0);
+						MessageBox(hwnd, Busqueda->Dato->Password, wPassword, MB_OK);
+						if (Busqueda->Dato->Password == wPassword) {
+							ActiveVet = Busqueda->Dato->Clave;
+							HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORFECHA), NULL, AgendaCallback);
+							ShowWindow(window, SW_SHOW);
+							EndDialog(hwnd, 0);
+						}else
+							MessageBox(hwnd, "Contraseña inválida", "Vuelva a intentarlo", MB_OK);
+						
 					}else
-						MessageBox(hwnd, L"Ingrese un usuario válido", L"No se encontró el usuario", MB_OK);
+						MessageBox(hwnd, "Ingrese un usuario válido", "No se encontró el usuario", MB_OK);
 				}break;
 				case WM_CLOSE:
 				case WM_DESTROY: {
-					int result = MessageBox(hwnd, L"¿Desea cerrar el programa?", L"Advertencia", 1);
+					int result = MessageBox(hwnd, "¿Desea cerrar el programa?", "Advertencia", 1);
 					if (result != 1)
 						break;
 					PostQuitMessage(0);
@@ -142,15 +146,15 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			HWND hName = GetDlgItem(hwnd, EDIT_NOMBRE);
 			int iTextLength = GetWindowTextLength(hName);
 			char name[100];
-			GetWindowText(hName, (LPWSTR)name, iTextLength+1);
+			GetWindowText(hName, name, iTextLength+1);
 			
 			if (iTextLength < 1) {
-				MessageBox(NULL, L"Ingresa datos", L"Error", MB_OK);
+				MessageBox(NULL, "Ingresa datos", "Error", MB_OK);
 			}
 			else {
 				//codigo para guardar la info
 
-				MessageBox(NULL, (LPWSTR)name, L"Error", MB_OK);
+				MessageBox(NULL, name, "Error", MB_OK);
 			}
 
 		}
@@ -221,7 +225,7 @@ BOOL Menu(INT opcion, HWND window0) {
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_SALIR: {
-			int result = MessageBox(window0, L"¿Desea cerrar el programa?", L"Advertencia", 1);
+			int result = MessageBox(window0, "¿Desea cerrar el programa?", "Advertencia", 1);
 			if (result != 1)
 				break;
 			PostQuitMessage(0);
@@ -230,13 +234,13 @@ BOOL Menu(INT opcion, HWND window0) {
 	}return TRUE;
 }
 
-VETERINARIO* crearVet(char nombre, int cedula, int clave, char fotoRuta, char password) {
+VETERINARIO* crearVet(char nombre, int cedula, int clave, char fotoRuta, char password) { // Debería usar char*?
 	VETERINARIO* nuevo = new VETERINARIO;
 	strcpy_s(nuevo->Nombre, 100, &nombre);
 	nuevo->Cedula = cedula;
 	nuevo->Clave = clave;
 	strcpy_s(nuevo->FotoRuta, 200, &fotoRuta);
-	strcpy_s(nuevo->Password, 20, &password);
+	strcpy_s(nuevo->Password, 20, &password); // Se estará asignando todo esto bien?
 	return nuevo;
 }
 NODOVET* nuevoNodoVet(VETERINARIO* dato) {
