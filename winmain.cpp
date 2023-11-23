@@ -67,7 +67,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 	LISTAVET.Fin = NULL;
 	LISTACITA.Origen = NULL;
 	LISTACITA.Fin = NULL;
-	agregarVetFinal(crearVet((char*)"Administrador", 0000000, 001, (char*)"X", (char*)"Admin")); // Recasteo solo para que no de error
+	agregarVetFinal(crearVet((char*)"Administrador", 0000000, 001, (char*)"X", (char*)"Admin"));
 
 	// Ventana y ciclo de mensajes
 	ShowWindow(hWindow, cShow);
@@ -93,8 +93,6 @@ LRESULT CALLBACK LoginCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 						HWND hPassword = GetDlgItem(hwnd, EDIT_LOGIN_PASSWORD);
 						char wPassword[20];
 						GetDlgItemText(hwnd, EDIT_LOGIN_PASSWORD, wPassword, 20);
-						char VetPassword[20];
-						//strcpy_s((char*)VetPassword, 20, Busqueda->Dato->Password);
 
 						MessageBox(hwnd, Busqueda->Dato->Password, wPassword, MB_OK);
 						if (strcmp(Busqueda->Dato->Password, wPassword) == 0){
@@ -152,7 +150,7 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 				MessageBox(NULL, "Ingresa datos", "Error", MB_OK);
 			}
 			else {
-				//codigo para guardar la info
+				//Guardar la info
 
 				MessageBox(NULL, name, "Error", MB_OK);
 			}
@@ -234,13 +232,13 @@ BOOL Menu(INT opcion, HWND window0) {
 	}return TRUE;
 }
 
-VETERINARIO* crearVet(char* nombre, int cedula, int clave, char* fotoRuta, char* password) { // Debería usar char*?
+VETERINARIO* crearVet(char* nombre, int cedula, int clave, char* fotoRuta, char* password) {
 	VETERINARIO* nuevo = new VETERINARIO;
 	strcpy_s(nuevo->Nombre, 100, nombre);
 	nuevo->Cedula = cedula;
 	nuevo->Clave = clave;
 	strcpy_s(nuevo->FotoRuta, 200, fotoRuta);
-	strcpy_s(nuevo->Password, 20, password); // Se estará asignando todo esto bien?
+	strcpy_s(nuevo->Password, 20, password);
 	return nuevo;
 }
 NODOVET* nuevoNodoVet(VETERINARIO* dato) {
