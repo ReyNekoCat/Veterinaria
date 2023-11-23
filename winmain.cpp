@@ -8,7 +8,7 @@ struct VETERINARIO {
 	int Cedula;
 	int Clave;
 	char FotoRuta[200];
-	char Password;
+	char Password[20];
 };
 struct NODOVET {
 	VETERINARIO* Dato;
@@ -41,6 +41,7 @@ struct CITAS {
 }LISTACITA;
 
 HINSTANCE hInst;  // Instancia actual
+int ActiveVet = 000; // Veterinario actual (Bruh)
 
 LRESULT CALLBACK LoginCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK AgendaCallback(HWND, UINT, WPARAM, LPARAM);
@@ -51,7 +52,7 @@ BOOL Menu(INT, HWND);
 VETERINARIO* crearVet(char, int, int, char, char);
 NODOVET* nuevoNodoVet(VETERINARIO*);
 void agregarVetFinal(VETERINARIO*);
-NODOVET* buscarClave(int);
+NODOVET* buscarPorClave(int);
 CITA* crearCita(int, float, char, int, int, char, char, int, float);
 NODOCITA* nuevoNodoCita(CITA*);
 void agregarCita(CITA*);
@@ -62,6 +63,11 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 	HWND hWindow = CreateDialog(hInst, MAKEINTRESOURCE(DLG_LOGIN), NULL, LoginCallback);
 	MSG Msg;
 	ZeroMemory(&Msg, sizeof(Msg));
+	LISTAVET.Origen = NULL;
+	LISTAVET.Fin = NULL;
+	LISTACITA.Origen = NULL;
+	LISTACITA.Fin = NULL;
+	agregarVetFinal(crearVet((char)"Administrador", 0000000, 001, NULL, (char)"A"));
 
 	// Ventana y ciclo de mensajes
 	ShowWindow(hWindow, cShow);
@@ -80,9 +86,23 @@ LRESULT CALLBACK LoginCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			switch (ID) {
 					// Casos de Login
 				case BTN_LOGIN: {
-					HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORFECHA), NULL, AgendaCallback);
-					ShowWindow(window, SW_SHOW);
-					EndDialog(hwnd, 0);
+
+					NODOVET* Busqueda = buscarPorClave(GetDlgItemInt(hwnd, EDIT_LOGIN_CLAVE, 0, 0));
+					HWND hPassword = GetDlgItem(hwnd, EDIT_LOGIN_PASSWORD);
+					WCHAR wPassword[20];
+					GetDlgItemText(hwnd, EDIT_LOGIN_PASSWORD, wPassword, 20);
+					char VetPassword[20];
+					strcpy_s(VetPassword, 20, Busqueda->Dato->Password);
+
+					if (Busqueda->Dato->Clave != NULL) {
+						ActiveVet = Busqueda->Dato->Clave;
+
+						HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORFECHA), NULL, AgendaCallback);
+						ShowWindow(window, SW_SHOW);
+						EndDialog(hwnd, 0);
+						
+					}
+					
 				}break;
 				case WM_CLOSE:
 				case WM_DESTROY: {
@@ -201,6 +221,9 @@ BOOL Menu(INT opcion, HWND window0) {
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_SALIR: {
+			int result = MessageBox(window0, L"¿Desea cerrar el programa?", L"Advertencia", 1);
+			if (result != 1)
+				break;
 			PostQuitMessage(0);
 		}break;
 		default: return FALSE;
@@ -213,7 +236,7 @@ VETERINARIO* crearVet(char nombre, int cedula, int clave, char fotoRuta, char pa
 	nuevo->Cedula = cedula;
 	nuevo->Clave = clave;
 	strcpy_s(nuevo->FotoRuta, 200, &fotoRuta);
-	nuevo->Password = password;
+	strcpy_s(nuevo->Password, 20, &password);
 	return nuevo;
 }
 NODOVET* nuevoNodoVet(VETERINARIO* dato) {
@@ -238,18 +261,19 @@ void agregarVetFinal(VETERINARIO* dato) {
 		LISTAVET.Fin = nodo;		
 	}
 }
-NODOVET* buscarClave(int buscar) {
+NODOVET* buscarPorClave(int buscar) {
 	if (LISTAVET.Origen == NULL)
 		return NULL;
 	NODOVET* indice = LISTAVET.Origen;
 
 	while (indice != NULL) {
-		if (indice->Dato->Clave == buscar)
+		if (indice->Dato->Clave == buscar){
+			return indice;
 			break;
+		}			
 		indice = indice->Siguiente;
 	}
-	return indice;
-}
+}	
 CITA* crearCita(int claveVet, float fecha, char nombreCliente, int telefono, int especie, char nombreMascota, char motivo, int estatus, float costo){
 	CITA* nuevo = new CITA;
 	nuevo->ClaveVet = claveVet;
@@ -302,4 +326,8 @@ void agregarCita(CITA* dato) {
 		temp->Siguiente->Anterior = nodo;
 		temp->Siguiente = nodo;
 	}
+}
+
+void imprimirListaVet() {
+
 }
