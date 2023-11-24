@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include <iostream>
 #include <oleauto.h> // Librería para administrar fechas
+#include <commctrl.h>
 #include "resource.h"
 
 struct VETERINARIO {
@@ -24,10 +25,10 @@ struct CITA {
 	float Fecha;
 	char NombreCliente[100];
 	int Telefono;
-	int Especie;
+	char Especie[20];
 	char NombreMascota[30];
 	char Motivo[500];
-	int Estatus;
+	char Estatus[20];
 	float Costo;
 };
 struct NODOCITA {
@@ -53,7 +54,7 @@ VETERINARIO* crearVet(char*, int, int, char*, char*);
 NODOVET* nuevoNodoVet(VETERINARIO*);
 void agregarVetFinal(VETERINARIO*);
 NODOVET* buscarPorClave(int);
-CITA* crearCita(int, float, char, int, int, char, char, int, float);
+CITA* crearCita(int, float, char*, int, char*, char*, char*, char*, float);
 NODOCITA* nuevoNodoCita(CITA*);
 void agregarCita(CITA*);
 
@@ -120,6 +121,10 @@ LRESULT CALLBACK LoginCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 }
 LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
+	HWND hCalendar = GetDlgItem(hwnd, CALENDAR_AGENDA);
+	SYSTEMTIME* fechaCalendar = { 0 };
+	DateTime_GetSystemtime(hCalendar, fechaCalendar);
+
 	switch (msg) {
 		case WM_COMMAND: {
 			int ID = LOWORD(wParam);
@@ -128,6 +133,15 @@ LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}				
 			switch (ID) {
 				// Casos de Agenda	
+				case CALENDAR_AGENDA: {
+					
+				}break;
+				case CB_AGENDA_HORA: {
+					HWND hCalendar = GetDlgItem(hwnd, CALENDAR_AGENDA);
+					SYSTEMTIME* fechaCalendar = { 0 };
+					MonthCal_GetCurSel(hCalendar, fechaCalendar);
+
+				}break;
 			}
 		}break;
 	}
@@ -135,13 +149,24 @@ LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 }
 LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
+	
+	HWND hName = GetDlgItem(hwnd, EDIT_NOMBRE);
+	HWND hTel = GetDlgItem(hwnd, EDIT_TEL);
+	HWND hMascota = GetDlgItem(hwnd, EDIT_MASCOTA);
+	HWND hEspecie = GetDlgItem(hwnd, CB_ESPECIE);
+	HWND hStatus = GetDlgItem(hwnd, CB_ESTATUS);
+	HWND hPrecio = GetDlgItem(hwnd, EDIT_PRECIO);
+	HWND hMotivo = GetDlgItem(hwnd, EDIT_MOTIVO);
+	HWND hArrayDatos[7] = { hName, hTel, hMascota, hEspecie, hStatus, hPrecio, hMotivo };
+
 	switch (msg) {
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
 		if (Menu(ID, hwnd))
 			return FALSE;
 		if (LOWORD(wParam) == BTN_CREAR && HIWORD(wParam) == BN_CLICKED) {
-			HWND hName = GetDlgItem(hwnd, EDIT_NOMBRE);
+			
+
 			int iTextLength = GetWindowTextLength(hName);
 			char name[100];
 			GetWindowText(hName, name, iTextLength+1);
@@ -158,7 +183,18 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		}
 		switch (ID) {
 			// Casos de Citas
+			case BTN_CREAR: {
+				char Nombre[100], NombreMascota[30], Motivo[500];
+				int Telefono, Especie, Estatus;
+				float Fecha, Costo;
+				GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName));
+				GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota));
+				GetDlgItemText(hwnd, EDIT_MOTIVO, Motivo, GetWindowTextLength(hMotivo));
+				GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
+				
+				//crearVet()
 
+			}break;
 
 
 		}
@@ -269,24 +305,24 @@ NODOVET* buscarPorClave(int buscar) {
 	NODOVET* indice = LISTAVET.Origen;
 
 	while (indice != NULL) {
-		if (indice->Dato->Clave == buscar){
+		if (indice->Dato->Clave == buscar) {
 			return indice;
 			break;
-		}			
+		}
 		indice = indice->Siguiente;
 	}
 	return NULL;
-}	
-CITA* crearCita(int claveVet, float fecha, char nombreCliente, int telefono, int especie, char nombreMascota, char motivo, int estatus, float costo){
+}
+CITA* crearCita(int claveVet, float fecha, char* nombreCliente, int telefono, char* especie, char* nombreMascota, char* motivo, char* estatus, float costo){
 	CITA* nuevo = new CITA;
 	nuevo->ClaveVet = claveVet;
 	nuevo->Fecha = fecha;
-	strcpy_s(nuevo->NombreCliente, 100, &nombreCliente);	
+	strcpy_s(nuevo->NombreCliente, 100, nombreCliente);	
 	nuevo->Telefono = telefono;
-	nuevo->Especie = especie;
-	strcpy_s(nuevo->NombreMascota, 30, &nombreMascota);
-	strcpy_s(nuevo->Motivo, 500, &motivo);
-	nuevo->Estatus = estatus;
+	strcpy_s(nuevo->Especie, 20, especie);
+	strcpy_s(nuevo->NombreMascota, 30, nombreMascota);
+	strcpy_s(nuevo->Motivo, 500, motivo);
+	strcpy_s(nuevo->Estatus, 20, estatus);
 	nuevo->Costo = costo;
 	return nuevo;
 }
@@ -329,8 +365,4 @@ void agregarCita(CITA* dato) {
 		temp->Siguiente->Anterior = nodo;
 		temp->Siguiente = nodo;
 	}
-}
-
-void imprimirListaVet() {
-
 }
