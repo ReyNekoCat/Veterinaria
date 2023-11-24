@@ -135,7 +135,32 @@ LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 	DateTime_GetSystemtime(hCalendar, fechaCalendar);*/
 
 	switch (msg) {
+	case WM_INITDIALOG: { 
+		NODOVET* busqueda = buscarPorClave(ActiveVet); 
+		SetDlgItemText(hwnd, EDIT_VET_AGENDA, busqueda->Dato->Nombre); 
+		SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta); 
+
+		//Abrir imagen desde la ruta guardada
+		OPENFILENAME ofn; 
+		ZeroMemory(&ofn, sizeof(ofn)); 
+		SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta); 
+		HBITMAP imagen = 
+			(HBITMAP)LoadImage( 
+				hInst, 
+				busqueda->Dato->FotoRuta, 
+				IMAGE_BITMAP, 
+				75, 75,
+				LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE); 
+		if (imagen != NULL) 
+			SendMessage(GetDlgItem(hwnd, PC_AGENDA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen); 
+
+
+
+	}
 		case WM_COMMAND: {
+
+		
+
 			int ID = LOWORD(wParam);
 			if (Menu(ID, hwnd)) {
 				return FALSE;
