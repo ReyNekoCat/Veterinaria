@@ -197,13 +197,54 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 				if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE)|| !ValidarLetras(wCITA_MASCOTA, Length_MASCOTA)|| !ValidarTelefono(wTEL, LengthTEL)||!ValidarPrecio(wPRECIO, LengthPRECIO)) {
 					break;
 				}else {
+					// Agrega funciones para guardar los datos//
+
+
 					MessageBox(NULL, "La cita ha sido agregada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION); 
 
 					//agregarCita(crearCita(hwnd, ActiveVet));
 				}
 
 			}break;
+			case BTN_MODIFICAR: {
+				//Validar Nombre del dueño
+				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE);
+				int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
+				char wVET_NOMBRE[100];
+				GetDlgItemText(hwnd, EDIT_NOMBRE, wVET_NOMBRE, 100);
+				GetWindowText(hVET_NOMBRE, wVET_NOMBRE, Length_NOMBRE + 1);
+				//Validad nombre de la mascota
+				HWND hCITA_MASCOTA = GetDlgItem(hwnd, EDIT_MASCOTA);
+				int Length_MASCOTA = GetWindowTextLength(hCITA_MASCOTA);
+				char wCITA_MASCOTA[100];
+				GetDlgItemText(hwnd, EDIT_MASCOTA, wCITA_MASCOTA, 100);
+				GetWindowText(hCITA_MASCOTA, wCITA_MASCOTA, Length_MASCOTA + 1);
+				//Validar numero telefonico 
+				HWND hTEL = GetDlgItem(hwnd, EDIT_TEL);
+				int LengthTEL = GetWindowTextLength(hTEL);
+				char wTEL[20];
+				GetDlgItemText(hwnd, EDIT_TEL, wTEL, 20);
+				GetWindowText(hTEL, wTEL, LengthTEL + 1);
+				//Validar precio
+				HWND hPRECIO = GetDlgItem(hwnd, EDIT_PRECIO);
+				int LengthPRECIO = GetWindowTextLength(hPRECIO);
+				char wPRECIO[1000];
+				GetDlgItemText(hwnd, EDIT_PRECIO, wPRECIO, 1000);
+				GetWindowText(hPRECIO, wPRECIO, LengthPRECIO + 1);
 
+				if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE) || !ValidarLetras(wCITA_MASCOTA, Length_MASCOTA) || !ValidarTelefono(wTEL, LengthTEL) || !ValidarPrecio(wPRECIO, LengthPRECIO)) {
+					break;
+				}
+				else {
+					// Agrega funciones para guardar los datos//
+
+
+					MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
+
+					//agregarCita(crearCita(hwnd, ActiveVet));
+				}
+
+			}break;
 
 		}
 	}break;
