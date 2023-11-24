@@ -5,6 +5,7 @@
 #include <windowsx.h>
 #include "resource.h"
 
+// Declaración de estructuras
 struct VETERINARIO {
 	char Nombre[100];
 	int Cedula;
@@ -47,6 +48,7 @@ struct CITAS {
 HINSTANCE hInst;  // Instancia actual
 int ActiveVet = 000; // Veterinario actual (Bruh)
 
+// Declaración de funciones
 LRESULT CALLBACK LoginCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK AgendaCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK CitasCallback(HWND, UINT, WPARAM, LPARAM);
@@ -62,11 +64,13 @@ NODOVET* buscarPorClave(int);
 CITA* crearCita(HWND, int);
 NODOCITA* nuevoNodoCita(CITA*);
 void agregarCita(CITA*);
+
 bool ValidarLetras(const char*, int);
 bool ValidarNumeros(const char*, int, const char*, int, int);
 bool ValidarTelefono(const char*, int);
 bool ValidarPrecio(const char*, int);
 
+// Función principal/Callbacks/Menu
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 
 	//Inicialización
@@ -339,7 +343,7 @@ LRESULT CALLBACK PerfilModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 					MessageBox(NULL, "Asegurate de ingresar correctamente los datos", "Aviso", MB_OK | MB_ICONERROR);
 				}
 				else {
-					///Algoritmo para el guardado de datos///*
+					///Algoritmo para el guardado de datos///
 					HWND hRUTA = GetDlgItem(hwnd, EDIT_DIRECCION);
 					char wRUTA[200], wPASSWORD[20];
 					GetDlgItemText(hwnd, EDIT_DIRECCION, wRUTA, 200);
@@ -512,6 +516,7 @@ BOOL Menu(INT opcion, HWND window0) {
 	}return TRUE;
 }
 
+// Funciones de creación/busqueda/modificación
 VETERINARIO* crearVet(char* nombre, int cedula, int clave, char* fotoRuta, char* password) {
 	VETERINARIO* nuevo = new VETERINARIO;
 	strcpy_s(nuevo->Nombre, 100, nombre);
@@ -663,6 +668,7 @@ NODOCITA* buscarCitaPorDia(int claveVet, SYSTEMTIME* dia) {
 	
 }
 
+// Funciones de validación
 bool ValidarLetras(const char* Letra, int Vacio) {
 	if (Vacio < 1) {
 		MessageBox(NULL, "No se admiten espacios en blanco", "Info", MB_OK | MB_ICONERROR);
