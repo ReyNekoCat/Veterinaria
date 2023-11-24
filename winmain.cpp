@@ -48,8 +48,8 @@ bool ValidarLetras(const char* Letra, int Vacio) {
 	}
 	// Itera a través de cada carácter 
 	for (int i = 0; Letra[i] != '\0'; ++i) {
-		// Verifica si el carácter no es una letra
-		if (!isalpha(Letra[i])) {
+		// Verifica si el carácter no es una letra 
+		if (!isalpha(Letra[i]) && !isspace(Letra[i])) {  
 			// Si encuentra un carácter no válido, muestra un mensaje de error y devuelve false
 			MessageBox(NULL, "Ingresa datos validos", "Error", MB_OK | MB_ICONERROR);
 			return false;
@@ -57,6 +57,23 @@ bool ValidarLetras(const char* Letra, int Vacio) {
 	}
 
 	// Si todos los caracteres son letras, devuelve true
+	return true;
+}
+bool ValidarNumeros(int CEDULA, int CLAVE, int CONTRASEÑA, int VACIO) {
+	if (VACIO < 1) {
+		MessageBox(NULL, "Ingrese los datos necesarios", "Info", MB_OK | MB_ICONERROR);
+		return false;
+	}
+	
+		// Verifica si el carácter no es una letra 
+		if (CEDULA>8||CEDULA<7) {
+			// Si encuentra un carácter no válido, muestra un mensaje de error y devuelve false
+			MessageBox(NULL, "La CEDULA no debe ser mayor a 8 digitos y menor que 7 digitos", "Error", MB_OK | MB_ICONERROR);
+			return false;
+		}
+	
+
+
 	return true;
 }
 HINSTANCE hInst;  // Instancia actual
@@ -198,7 +215,7 @@ LRESULT CALLBACK PerfilCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 			// Casos de Perfil	
 			//NODOVET* Busqueda = buscarPorClave(GetDlgItemInt(hwnd, EDIT_VET_NOMBRE, 0, 0)); 
 			case BTN_PERFIL_CREAR:{ 
-				
+				//MessageBox(hwnd, wVET_NOMBRE , "Info", MB_OK);   
 				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_VET_NOMBRE);   
 				int iTextLength = GetWindowTextLength(hVET_NOMBRE); 
 				char wVET_NOMBRE[100];
@@ -207,13 +224,58 @@ LRESULT CALLBACK PerfilCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if(!ValidarLetras(wVET_NOMBRE, iTextLength)){					
 					break;
 				}
-				else {
+				else { 
+					//logica para guardar
+
 
 
 				}
-					
 
-				//MessageBox(hwnd, wVET_NOMBRE , "Info", MB_OK);   
+
+				//validacion de cedula
+				HWND hCEDULA = GetDlgItem(hwnd, EDIT_CEDULA);
+				iTextLength = GetWindowTextLength(hCEDULA);
+				if (!ValidarNumeros(iTextLength, 0, 0, iTextLength)) {
+
+				}
+				
+
+				/* 
+				//validacion de clave de usuario
+				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_VET_NOMBRE);
+				int iTextLength = GetWindowTextLength(hVET_NOMBRE);
+				char wVET_NOMBRE[100];
+				GetDlgItemText(hwnd, EDIT_VET_NOMBRE, wVET_NOMBRE, 100);
+				GetWindowText(hVET_NOMBRE, wVET_NOMBRE, iTextLength + 1);
+				if (!ValidarLetras(wVET_NOMBRE, iTextLength)) {
+					break;
+				}
+				else {
+					//logica para guardar
+
+
+
+				}
+
+
+				//validacion de contraseña
+				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_VET_NOMBRE);
+				int iTextLength = GetWindowTextLength(hVET_NOMBRE);
+				char wVET_NOMBRE[100];
+				GetDlgItemText(hwnd, EDIT_VET_NOMBRE, wVET_NOMBRE, 100);
+				GetWindowText(hVET_NOMBRE, wVET_NOMBRE, iTextLength + 1);
+				if (!ValidarLetras(wVET_NOMBRE, iTextLength)) {
+					break;
+				}
+				else {
+					//logica para guardar
+
+
+
+				}
+				*/
+				
+				  
 
 
 
