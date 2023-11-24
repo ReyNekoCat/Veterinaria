@@ -23,6 +23,8 @@ struct VETERINARIOS {
 }LISTAVET;
 struct CITA {
 	int ClaveVet;
+	SYSTEMTIME* Dia;
+	SYSTEMTIME* Hora;
 	double Fecha;
 	char NombreCliente[100];
 	int Telefono;
@@ -142,6 +144,7 @@ LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 					SYSTEMTIME* fechaCalendar = { 0 };
 					MonthCal_GetCurSel(hCalendar, fechaCalendar);
 
+
 				}break;
 			}
 		}break;
@@ -177,7 +180,7 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		switch (ID) {
 			// Casos de Citas
 			case BTN_CREAR: {
-				crearCita(hwnd, ActiveVet);
+				agregarCita(crearCita(hwnd, ActiveVet));
 			}break;
 
 
@@ -298,7 +301,7 @@ NODOVET* buscarPorClave(int buscar) {
 	return NULL;
 }
 CITA* crearCita(HWND hwnd, int claveVet){
-	HWND hFecha = GetDlgItem(hwnd, DTP_CREAR_FECHA);
+	HWND hDia = GetDlgItem(hwnd, DTP_CREAR_FECHA);
 	HWND hHora = GetDlgItem(hwnd, DTP_CREAR_HORA);
 	HWND hName = GetDlgItem(hwnd, EDIT_NOMBRE);
 	HWND hTel = GetDlgItem(hwnd, EDIT_TEL);
@@ -309,8 +312,9 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	HWND hMotivo = GetDlgItem(hwnd, EDIT_MOTIVO);
 
 	char Nombre[100], NombreMascota[30], Motivo[500], Especie[20], Estatus[20];
-	int Telefono; float Costo; double* fecha;
-	SYSTEMTIME* fechaCitas = { 0 };
+	int Telefono = 0; float Costo = 0; double* fecha = 0;
+	SYSTEMTIME* diaCitas = { 0 };
+	SYSTEMTIME* horaCitas = { 0 };
 
 	GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName));
 	GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota));
@@ -318,14 +322,14 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
 	ComboBox_GetText(hEspecie, Especie, GetWindowTextLength(hEspecie));
 	ComboBox_GetText(hEspecie, Estatus, GetWindowTextLength(hStatus));
-	DateTime_GetSystemtime(hFecha, fechaCitas);
-	DateTime_GetSystemtime(hHora, fechaCitas);
-	SystemTimeToVariantTime(fechaCitas, fecha);
+	DateTime_GetSystemtime(hDia, diaCitas);
+	// DateTime_GetSystemtime(hHora, horaCitas);  No se como ingresar la hora
+	// SystemTimeToVariantTime(fechaCitas, fecha);
 
 	// Ingreso a la lista
 	CITA* nuevo = new CITA;
 	nuevo->ClaveVet = claveVet;
-	nuevo->Fecha = *fecha;
+	//nuevo->Fecha = *fecha;
 	strcpy_s(nuevo->NombreCliente, 100, Nombre);	
 	nuevo->Telefono = Telefono;
 	strcpy_s(nuevo->Especie, 20, Especie);
@@ -374,4 +378,18 @@ void agregarCita(CITA* dato) {
 		temp->Siguiente->Anterior = nodo;
 		temp->Siguiente = nodo;
 	}
+}
+NODOCITA* buscarCitaPorDia(int claveVet, SYSTEMTIME* dia) {
+	if (LISTACITA.Origen == NULL)
+		return NULL;
+	NODOCITA* indice = LISTACITA.Origen;
+
+	while (indice != NULL) {
+		if (indice->Dato->Dia == dia) {
+			return indice;
+		}
+		indice = indice->Siguiente;
+	}
+	return NULL;
+	
 }
