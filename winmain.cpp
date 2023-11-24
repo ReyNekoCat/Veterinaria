@@ -235,12 +235,9 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 					break;
 				}
 				else {
-					// Agrega funciones para guardar los datos//
-
-
-					MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
-
-					//agregarCita(crearCita(hwnd, ActiveVet));
+					// Guardado de datos
+					agregarCita(crearCita(hwnd, ActiveVet));
+					MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);				
 				}
 
 			}break;
@@ -584,11 +581,11 @@ CITA* crearCita(HWND hwnd, int claveVet){
 
 	char Nombre[100], NombreMascota[30], Motivo[500], Especie[20], Estatus[20];
 	int Telefono = 0; float Costo = 0; 
-	double* hora = 0;
-	double* dia = 0;
-	int	fecha = 0;
-	SYSTEMTIME* diaCitas = { 0 };
-	SYSTEMTIME* horaCitas = { 0 };
+	double hora = 0;
+	double dia = 0;
+	double fecha = 0;
+	SYSTEMTIME diaCitas = { 0 };
+	SYSTEMTIME horaCitas = { 0 };
 
 	GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName));
 	GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota));
@@ -596,9 +593,11 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
 	ComboBox_GetText(hEspecie, Especie, GetWindowTextLength(hEspecie));
 	ComboBox_GetText(hEspecie, Estatus, GetWindowTextLength(hStatus));
-	DateTime_GetSystemtime(hDia, diaCitas);
-	DateTime_GetSystemtime(hHora, horaCitas); // Marca error
-	fecha = SystemTimeToVariantTime(diaCitas, dia) + SystemTimeToVariantTime(horaCitas, hora); //WIP
+	DateTime_GetSystemtime(hDia, &diaCitas);
+	DateTime_GetSystemtime(hHora, &horaCitas); // Aqui
+	SystemTimeToVariantTime(&diaCitas, &dia);
+	SystemTimeToVariantTime(&horaCitas, &hora);
+	fecha = ((int)dia) + (hora - ((int)hora));
 
 	// Ingreso a la lista
 	CITA* nuevo = new CITA;
