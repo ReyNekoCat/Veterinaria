@@ -58,7 +58,7 @@ bool ValidarLetras(const char* Letra, int Vacio) {
 	
 	return true;
 }
-bool ValidarNumeros(int CEDULA, int CLAVE, int PASSWORD) {
+bool ValidarNumeros(const char* cCEDULA, int CEDULA, const char* cCLAVE, int  CLAVE, int PASSWORD) {
 	if (CEDULA>8||CEDULA<7) {		
 		return false;
 	}else if (CLAVE != 3) {	
@@ -66,8 +66,18 @@ bool ValidarNumeros(int CEDULA, int CLAVE, int PASSWORD) {
 	}else if(PASSWORD > 8 || PASSWORD < 1){
 		return false;
 	}else {
-		return true;
-	}		
+		for (int i = 0; cCEDULA[i] != '\0'; ++i) {
+			if (!isdigit(cCEDULA[i])) {								
+				return false;
+			}
+		}
+		for (int i = 0; cCLAVE[i] != '\0'; ++i) {
+			if (!isdigit(cCLAVE[i])) { 
+				return false;
+			}
+		}
+	}
+	return true;
 }
 HINSTANCE hInst;  // Instancia actual
 int ActiveVet = 000; // Veterinario actual (Bruh)
@@ -205,38 +215,71 @@ LRESULT CALLBACK PerfilCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 			return FALSE;
 
 		switch (ID) {
-			// Casos de Perfil	
-			//NODOVET* Busqueda = buscarPorClave(GetDlgItemInt(hwnd, EDIT_VET_NOMBRE, 0, 0)); 
-			case BTN_PERFIL_CREAR:{ 
-				//MessageBox(hwnd, wVET_NOMBRE , "Info", MB_OK);   
+			// Casos de Perfil			 
+			case BTN_PERFIL_CREAR:{ 				  
 				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_VET_NOMBRE);   
-				int iTextLength = GetWindowTextLength(hVET_NOMBRE); 
+				int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE); 
 				char wVET_NOMBRE[100];
 				GetDlgItemText(hwnd, EDIT_VET_NOMBRE , wVET_NOMBRE, 100);
-				GetWindowText(hVET_NOMBRE, wVET_NOMBRE, iTextLength + 1);
-				if(!ValidarLetras(wVET_NOMBRE, iTextLength)){					
-					break;
-				}
-				else { 
-					//logica para guardar
-
-				}
+				GetWindowText(hVET_NOMBRE, wVET_NOMBRE, Length_NOMBRE + 1);	
 				//validacion de cedula
 				HWND hCEDULA = GetDlgItem(hwnd, EDIT_CEDULA);
-				int LengthCEDULA = GetWindowTextLength(hCEDULA);
+				int Length_CEDULA = GetWindowTextLength(hCEDULA);
+				char wCEDULA[100];
+				GetDlgItemText(hwnd, EDIT_CEDULA, wCEDULA, 20); 
+				GetWindowText(hCEDULA, wCEDULA, Length_CEDULA + 1);
 				//validacion de clave de usuario
 				HWND hCLAVE = GetDlgItem(hwnd, EDIT_CLAVE); 
 				int LengthCLAVE = GetWindowTextLength(hCLAVE); 
+				char wCLAVE[20];
+				GetDlgItemText(hwnd, EDIT_CLAVE, wCLAVE, 20);
+				GetWindowText(hCLAVE, wCLAVE, LengthCLAVE + 1); 
 				//validacion de contraseña
 				HWND hCONTRASEÑA = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD); 
-
 				int LengthPASS = GetWindowTextLength(hCONTRASEÑA); 
-				if (!ValidarNumeros(LengthCEDULA, 3, 5) || !ValidarNumeros(8, LengthCLAVE, 5)|| !ValidarNumeros(8, 3, LengthPASS)) { 
-					MessageBox(NULL, "Datos no validos", "Error", MB_OK | MB_ICONERROR); 
-				}else{ 
-					MessageBox(NULL, "Tus datos han sido ingresados correctamente", "Bienvenido!!!", MB_OK | MB_ICONINFORMATION);
+				if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE)) { 
+					break;
+				}else if (!ValidarNumeros(wCEDULA, Length_CEDULA, wCLAVE, LengthCLAVE, LengthPASS)) {
+					MessageBox(NULL, "Asegurate de ingresar correctamente los datos", "Aviso", MB_OK | MB_ICONERROR); 
 				}
-		
+				else {
+					///Algoritmo para el guardado de datos///*
+					MessageBox(NULL, "Tus datos han sido ingresados correctamente", "Bienvenido!!!", MB_OK | MB_ICONINFORMATION); 
+				}
+						
+			}break;
+			case BTN_PERFIL_APLICAR: {
+
+				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_VET_NOMBRE);
+				int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
+				char wVET_NOMBRE[100];
+				GetDlgItemText(hwnd, EDIT_VET_NOMBRE, wVET_NOMBRE, 100);
+				GetWindowText(hVET_NOMBRE, wVET_NOMBRE, Length_NOMBRE + 1);
+				//validacion de cedula
+				HWND hCEDULA = GetDlgItem(hwnd, EDIT_CEDULA);
+				int Length_CEDULA = GetWindowTextLength(hCEDULA);
+				char wCEDULA[100];
+				GetDlgItemText(hwnd, EDIT_CEDULA, wCEDULA, 20);
+				GetWindowText(hCEDULA, wCEDULA, Length_CEDULA + 1);
+				//validacion de clave de usuario
+				HWND hCLAVE = GetDlgItem(hwnd, EDIT_CLAVE);
+				int LengthCLAVE = GetWindowTextLength(hCLAVE);
+				char wCLAVE[20];
+				GetDlgItemText(hwnd, EDIT_CLAVE, wCLAVE, 20);
+				GetWindowText(hCLAVE, wCLAVE, LengthCLAVE + 1);
+				//validacion de contraseña
+				HWND hCONTRASEÑA = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD);
+				int LengthPASS = GetWindowTextLength(hCONTRASEÑA);
+				if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE)) {
+					break;
+				}
+				else if (!ValidarNumeros(wCEDULA, Length_CEDULA, wCLAVE, LengthCLAVE, LengthPASS)) {
+					MessageBox(NULL, "Asegurate de ingresar correctamente los datos", "Aviso", MB_OK | MB_ICONERROR);
+				}
+				else {
+					///Algoritmo para el guardado de datos///*
+					MessageBox(NULL, "Tus datos han sido modificados correctamente", "Bienvenido!!!", MB_OK | MB_ICONINFORMATION);
+				}
 			}break;
 		case WM_CLOSE: 
 		case WM_DESTROY: { 
