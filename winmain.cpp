@@ -312,7 +312,10 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	HWND hMotivo = GetDlgItem(hwnd, EDIT_MOTIVO);
 
 	char Nombre[100], NombreMascota[30], Motivo[500], Especie[20], Estatus[20];
-	int Telefono = 0; float Costo = 0; double* fecha = 0;
+	int Telefono = 0; float Costo = 0; 
+	double* hora = 0;
+	double* dia = 0;
+	int	fecha = 0;
 	SYSTEMTIME* diaCitas = { 0 };
 	SYSTEMTIME* horaCitas = { 0 };
 
@@ -323,13 +326,13 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	ComboBox_GetText(hEspecie, Especie, GetWindowTextLength(hEspecie));
 	ComboBox_GetText(hEspecie, Estatus, GetWindowTextLength(hStatus));
 	DateTime_GetSystemtime(hDia, diaCitas);
-	// DateTime_GetSystemtime(hHora, horaCitas);  No se como ingresar la hora
-	// SystemTimeToVariantTime(fechaCitas, fecha);
+	DateTime_GetSystemtime(hHora, horaCitas); // Marca error
+	fecha = SystemTimeToVariantTime(diaCitas, dia) + SystemTimeToVariantTime(horaCitas, hora); //WIP
 
 	// Ingreso a la lista
 	CITA* nuevo = new CITA;
 	nuevo->ClaveVet = claveVet;
-	//nuevo->Fecha = *fecha;
+	nuevo->Fecha = fecha; // fecha sería el VariantTime completo
 	strcpy_s(nuevo->NombreCliente, 100, Nombre);	
 	nuevo->Telefono = Telefono;
 	strcpy_s(nuevo->Especie, 20, Especie);
@@ -374,7 +377,7 @@ void agregarCita(CITA* dato) {
 			temp = temp->Siguiente;
 		}
 		nodo->Anterior = temp;
-		nodo->Siguiente = temp->Siguiente;
+		nodo->Siguiente = temp->Siguiente; // Dereferencing NULL??
 		temp->Siguiente->Anterior = nodo;
 		temp->Siguiente = nodo;
 	}
