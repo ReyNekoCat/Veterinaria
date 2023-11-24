@@ -44,61 +44,26 @@ struct CITAS {
 	NODOCITA* Fin;
 }LISTACITA;
 
-
-bool ValidarLetras(const char* Letra, int Vacio) {
-	if (Vacio < 1) {
-		MessageBox(NULL, "No se admiten espacios en blanco", "Info", MB_OK | MB_ICONERROR); 
-		return false;
-	}else {
-		for (int i = 0; Letra[i] != '\0'; ++i) { 
-			if (!isalpha(Letra[i]) && !isspace(Letra[i])) {
-				// Si encuentra un carácter no válido, muestra un mensaje de error y devuelve false
-				MessageBox(NULL, "Ingresa datos validos", "Error", MB_OK | MB_ICONERROR);
-				return false;
-			}
-		}
-	}
-		
-	
-	return true;
-}
-bool ValidarNumeros(const char* cCEDULA, int CEDULA, const char* cCLAVE, int  CLAVE, int PASSWORD) {
-	if (CEDULA>8||CEDULA<7) {		
-		return false;
-	}else if (CLAVE != 3) {	
-		return false;
-	}else if(PASSWORD > 8 || PASSWORD < 1){
-		return false;
-	}else {
-		for (int i = 0; cCEDULA[i] != '\0'; ++i) {
-			if (!isdigit(cCEDULA[i])) {								
-				return false;
-			}
-		}
-		for (int i = 0; cCLAVE[i] != '\0'; ++i) {
-			if (!isdigit(cCLAVE[i])) { 
-				return false;
-			}
-		}
-	}
-	return true;
-}
 HINSTANCE hInst;  // Instancia actual
 int ActiveVet = 000; // Veterinario actual (Bruh)
 
 LRESULT CALLBACK LoginCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK AgendaCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK CitasCallback(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK PerfilCallback(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK PerfilModCallback(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK PerfilCrearCallback(HWND, UINT, WPARAM, LPARAM);
 BOOL Menu(INT, HWND);
 
 VETERINARIO* crearVet(char*, int, int, char*, char*);
+void modVet(char*, int, int, char*, char*);
 NODOVET* nuevoNodoVet(VETERINARIO*);
 void agregarVetFinal(VETERINARIO*);
 NODOVET* buscarPorClave(int);
 CITA* crearCita(HWND, int);
 NODOCITA* nuevoNodoCita(CITA*);
 void agregarCita(CITA*);
+bool ValidarLetras(const char*, int);
+bool ValidarNumeros(const char*, int, const char*, int, int);
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 
@@ -110,7 +75,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 	LISTAVET.Fin = NULL;
 	LISTACITA.Origen = NULL;
 	LISTACITA.Fin = NULL;
-	agregarVetFinal(crearVet((char*)"Administrador", 0000000, 001, (char*)"X", (char*)"Admin"));
+	agregarVetFinal(crearVet((char*)"Administrador", 1234567, 001, (char*)"X", (char*)"Admin"));
 
 	// Ventana y ciclo de mensajes
 	ShowWindow(hWindow, cShow);
@@ -144,6 +109,7 @@ LRESULT CALLBACK LoginCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 							HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORFECHA), NULL, AgendaCallback);
 							ShowWindow(window, SW_SHOW);
 							EndDialog(hwnd, 0);
+
 						}else
 							MessageBox(hwnd, "Contraseña inválida", "Vuelva a intentarlo", MB_OK);
 						
@@ -163,10 +129,9 @@ LRESULT CALLBACK LoginCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	return FALSE;
 }
 LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-
-	HWND hCalendar = GetDlgItem(hwnd, CALENDAR_AGENDA);
+	/*HWND hCalendar = GetDlgItem(hwnd, CALENDAR_AGENDA);
 	SYSTEMTIME* fechaCalendar = { 0 };
-	DateTime_GetSystemtime(hCalendar, fechaCalendar);
+	DateTime_GetSystemtime(hCalendar, fechaCalendar);*/
 
 	switch (msg) {
 		case WM_COMMAND: {
@@ -192,8 +157,6 @@ LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 	return FALSE;
 }
 LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-
-	
 
 	switch (msg) {
 	case WM_COMMAND: {
@@ -229,9 +192,21 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	}
 	return FALSE;
 }
-LRESULT CALLBACK PerfilCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK PerfilModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 	switch (msg) {
+	case WM_INITDIALOG: {
+		NODOVET* busqueda = buscarPorClave(ActiveVet);
+		HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_VET_NOMBRE);
+		HWND hCEDULA = GetDlgItem(hwnd, EDIT_CEDULA);
+		HWND hCLAVE = GetDlgItem(hwnd, EDIT_CLAVE);
+		HWND hCONTRASEÑA = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD);
+		HWND hRUTA = GetDlgItem(hwnd, EDIT_DIRECCION);
+		SetDlgItemText(hwnd, EDIT_VET_NOMBRE, busqueda->Dato->Nombre);
+		SetDlgItemInt(hwnd, EDIT_CEDULA, busqueda->Dato->Cedula, NULL);
+		SetDlgItemInt(hwnd, EDIT_CLAVE, busqueda->Dato->Clave, NULL);
+		SetDlgItemText(hwnd, EDIT_PERFIL_PASSWORD, busqueda->Dato->Password);
+	}
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
 		if (Menu(ID, hwnd))
@@ -239,38 +214,6 @@ LRESULT CALLBACK PerfilCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		switch (ID) {
 			// Casos de Perfil			 
-			case BTN_PERFIL_CREAR:{ 				  
-				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_VET_NOMBRE);   
-				int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE); 
-				char wVET_NOMBRE[100];
-				GetDlgItemText(hwnd, EDIT_VET_NOMBRE , wVET_NOMBRE, 100);
-				GetWindowText(hVET_NOMBRE, wVET_NOMBRE, Length_NOMBRE + 1);	
-				//validacion de cedula
-				HWND hCEDULA = GetDlgItem(hwnd, EDIT_CEDULA);
-				int Length_CEDULA = GetWindowTextLength(hCEDULA);
-				char wCEDULA[100];
-				GetDlgItemText(hwnd, EDIT_CEDULA, wCEDULA, 20); 
-				GetWindowText(hCEDULA, wCEDULA, Length_CEDULA + 1);
-				//validacion de clave de usuario
-				HWND hCLAVE = GetDlgItem(hwnd, EDIT_CLAVE); 
-				int LengthCLAVE = GetWindowTextLength(hCLAVE); 
-				char wCLAVE[20];
-				GetDlgItemText(hwnd, EDIT_CLAVE, wCLAVE, 20);
-				GetWindowText(hCLAVE, wCLAVE, LengthCLAVE + 1); 
-				//validacion de contraseña
-				HWND hCONTRASEÑA = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD); 
-				int LengthPASS = GetWindowTextLength(hCONTRASEÑA); 
-				if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE)) { 
-					break;
-				}else if (!ValidarNumeros(wCEDULA, Length_CEDULA, wCLAVE, LengthCLAVE, LengthPASS)) {
-					MessageBox(NULL, "Asegurate de ingresar correctamente los datos", "Aviso", MB_OK | MB_ICONERROR); 
-				}
-				else {
-					///Algoritmo para el guardado de datos///*
-					MessageBox(NULL, "Tus datos han sido ingresados correctamente", "Bienvenido!!!", MB_OK | MB_ICONINFORMATION); 
-				}
-						
-			}break;
 			case BTN_PERFIL_APLICAR: {
 
 				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_VET_NOMBRE);
@@ -281,7 +224,7 @@ LRESULT CALLBACK PerfilCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 				//validacion de cedula
 				HWND hCEDULA = GetDlgItem(hwnd, EDIT_CEDULA);
 				int Length_CEDULA = GetWindowTextLength(hCEDULA);
-				char wCEDULA[100];
+				char wCEDULA[20];
 				GetDlgItemText(hwnd, EDIT_CEDULA, wCEDULA, 20);
 				GetWindowText(hCEDULA, wCEDULA, Length_CEDULA + 1);
 				//validacion de clave de usuario
@@ -301,15 +244,120 @@ LRESULT CALLBACK PerfilCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 				}
 				else {
 					///Algoritmo para el guardado de datos///*
+					char wRUTA[200], wPASSWORD[20];
+					GetDlgItemText(hwnd, EDIT_DIRECCION, wRUTA, 200);
+					GetDlgItemText(hwnd, EDIT_PERFIL_PASSWORD_CREAR, wPASSWORD, LengthPASS + 1);
+					modVet(wVET_NOMBRE, GetDlgItemInt(hwnd, EDIT_CEDULA, NULL, NULL), GetDlgItemInt(hwnd, EDIT_CLAVE, NULL, NULL), wRUTA, wPASSWORD);
 					MessageBox(NULL, "Tus datos han sido modificados correctamente", "Bienvenido!!!", MB_OK | MB_ICONINFORMATION);
 				}
 			}break;
-		case WM_CLOSE: 
-		case WM_DESTROY: { 
-			int result = MessageBox(hwnd, "¿Desea cerrar el programa?", "Advertencia", 1); 
+			case BTN_SEARCH:{
+				WCHAR ruta[300] = { 0 };
+				OPENFILENAME ofn;
+				ZeroMemory(&ofn, sizeof(ofn));
+				ofn.lStructSize = sizeof(OPENFILENAME);
+				ofn.hwndOwner = hwnd;
+				ofn.lpstrFile = (LPSTR)ruta;
+				ofn.nMaxFile = 1000;
+				ofn.lpstrFilter = "Bitmap\0*.bmp\0";
+				ofn.nFilterIndex = 1;
+				ofn.lpstrTitle = NULL;
+				ofn.nMaxFileTitle = 0;
+				ofn.lpstrInitialDir = NULL;
+				ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+				if (GetOpenFileName(&ofn)) {
+					SetDlgItemText(hwnd, EDIT_DIRECCION, (LPSTR)ruta);
+					HBITMAP imagen =
+						(HBITMAP)LoadImage(
+							hInst,
+							(LPSTR)ruta,
+							IMAGE_BITMAP,
+							75, 75,
+							LR_DEFAULTCOLOR |
+							LR_DEFAULTSIZE |
+							LR_LOADFROMFILE);
+					if (imagen != NULL)
+						SendMessage(
+							GetDlgItem(hwnd, PC_VET_FOTO),
+							STM_SETIMAGE,
+							IMAGE_BITMAP,
+							(LPARAM)imagen);
+				}
+			}
+			case WM_CLOSE: 
+			case WM_DESTROY: { 
+				int result = MessageBox(hwnd, "¿Desea cerrar el programa?", "Advertencia", 1); 
+				if (result != 1)
+					break;
+				PostQuitMessage(0); 
+			}break;
+		}
+	}break;
+	}
+	return FALSE;
+}
+LRESULT CALLBACK PerfilCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+
+	switch (msg) {
+	case WM_COMMAND: {
+		int ID = LOWORD(wParam);
+		if (Menu(ID, hwnd))
+			return FALSE;
+
+		switch (ID) {
+			// Casos de Perfil			 
+		case BTN_PERFIL_CREAR: {
+			HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_VET_NOMBRE_CREAR);
+			int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
+			char wVET_NOMBRE[100];
+			GetDlgItemText(hwnd, EDIT_VET_NOMBRE, wVET_NOMBRE, 100);
+			GetWindowText(hVET_NOMBRE, wVET_NOMBRE, Length_NOMBRE + 1);
+			//validacion de cedula
+			HWND hCEDULA = GetDlgItem(hwnd, EDIT_CEDULA_CREAR);
+			int Length_CEDULA = GetWindowTextLength(hCEDULA);
+			char wCEDULA[100];
+			GetDlgItemText(hwnd, EDIT_CEDULA, wCEDULA, 20);
+			GetWindowText(hCEDULA, wCEDULA, Length_CEDULA + 1);
+			//validacion de clave de usuario
+			HWND hCLAVE = GetDlgItem(hwnd, EDIT_CLAVE_CREAR);
+			int LengthCLAVE = GetWindowTextLength(hCLAVE);
+			char wCLAVE[20];
+			GetDlgItemText(hwnd, EDIT_CLAVE, wCLAVE, 20);
+			GetWindowText(hCLAVE, wCLAVE, LengthCLAVE + 1);
+			//validacion de contraseña
+			HWND hCONTRASEÑA = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD_CREAR);
+			int LengthPASS = GetWindowTextLength(hCONTRASEÑA);
+			if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE)) {
+				break;
+			}
+			else if (!ValidarNumeros(wCEDULA, Length_CEDULA, wCLAVE, LengthCLAVE, LengthPASS)) {
+				MessageBox(NULL, "Asegurate de ingresar correctamente los datos", "Aviso", MB_OK | MB_ICONERROR);
+			}
+			else {
+				///Algoritmo para el guardado de datos///*
+				MessageBox(NULL, "Tus datos han sido ingresados correctamente", "Bienvenido!!!", MB_OK | MB_ICONINFORMATION);
+
+			}
+
+		}break;
+		
+		case BTN_SEARCH: {
+			NODOVET* busqueda = buscarPorClave(ActiveVet);
+			HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_VET_NOMBRE);
+			HWND hCEDULA = GetDlgItem(hwnd, EDIT_CEDULA);
+			HWND hCLAVE = GetDlgItem(hwnd, EDIT_CLAVE);
+			HWND hCONTRASEÑA = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD);
+			SetDlgItemText(hwnd, EDIT_VET_NOMBRE, busqueda->Dato->Nombre);
+			SetDlgItemInt(hwnd, EDIT_CEDULA, busqueda->Dato->Cedula, NULL);
+			SetDlgItemInt(hwnd, EDIT_CLAVE, busqueda->Dato->Clave, NULL);
+			SetDlgItemText(hwnd, EDIT_PERFIL_PASSWORD, busqueda->Dato->Password);
+		}
+		case WM_CLOSE:
+		case WM_DESTROY: {
+			int result = MessageBox(hwnd, "¿Desea cerrar el programa?", "Advertencia", 1);
 			if (result != 1)
 				break;
-			PostQuitMessage(0); 
+			PostQuitMessage(0);
 		}break;
 
 
@@ -348,12 +396,13 @@ BOOL Menu(INT opcion, HWND window0) {
 		}break;
 		case MENU_PERFIL_MODIFICAR: {
 			DestroyWindow(window0);
-			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_PERFIL_MODIFICAR), NULL, PerfilCallback);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_PERFIL_MODIFICAR), NULL, PerfilModCallback);
 			ShowWindow(window1, SW_SHOW);
+			
 		}break;
 		case MENU_PERFIL_CREAR: {
 			DestroyWindow(window0);
-			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_PERFIL_CREAR), NULL, PerfilCallback);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_PERFIL_CREAR), NULL, PerfilCrearCallback);
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_SALIR: {
@@ -374,6 +423,14 @@ VETERINARIO* crearVet(char* nombre, int cedula, int clave, char* fotoRuta, char*
 	strcpy_s(nuevo->FotoRuta, 200, fotoRuta);
 	strcpy_s(nuevo->Password, 20, password);
 	return nuevo;
+}
+void modVet(char* nombre, int cedula, int clave, char* fotoRuta, char* password) {
+	strcpy_s(buscarPorClave(ActiveVet)->Dato->Nombre, 100, nombre);
+	buscarPorClave(ActiveVet)->Dato->Cedula = cedula;
+	buscarPorClave(ActiveVet)->Dato->Clave = clave;
+	strcpy_s(buscarPorClave(ActiveVet)->Dato->FotoRuta, 200, fotoRuta);
+	strcpy_s(buscarPorClave(ActiveVet)->Dato->Password, 20, password);
+	ActiveVet = buscarPorClave(ActiveVet)->Dato->Clave;
 }
 NODOVET* nuevoNodoVet(VETERINARIO* dato) {
 	NODOVET* nodo = new NODOVET;
@@ -506,4 +563,47 @@ NODOCITA* buscarCitaPorDia(int claveVet, SYSTEMTIME* dia) {
 	}
 	return NULL;
 	
+}
+
+bool ValidarLetras(const char* Letra, int Vacio) {
+	if (Vacio < 1) {
+		MessageBox(NULL, "No se admiten espacios en blanco", "Info", MB_OK | MB_ICONERROR);
+		return false;
+	}
+	else {
+		for (int i = 0; Letra[i] != '\0'; ++i) {
+			if (!isalpha(Letra[i]) && !isspace(Letra[i])) {
+				// Si encuentra un carácter no válido, muestra un mensaje de error y devuelve false
+				MessageBox(NULL, "Ingresa datos validos", "Error", MB_OK | MB_ICONERROR);
+				return false;
+			}
+		}
+	}
+
+
+	return true;
+}
+bool ValidarNumeros(const char* cCEDULA, int CEDULA, const char* cCLAVE, int  CLAVE, int PASSWORD) {
+	if (CEDULA > 8 || CEDULA < 7) {
+		return false;
+	}
+	else if (CLAVE > 3) {
+		return false;
+	}
+	else if (PASSWORD > 8 || PASSWORD < 1) {
+		return false;
+	}
+	else {
+		for (int i = 0; cCEDULA[i] != '\0'; ++i) {
+			if (!isdigit(cCEDULA[i])) {
+				return false;
+			}
+		}
+		for (int i = 0; cCLAVE[i] != '\0'; ++i) {
+			if (!isdigit(cCLAVE[i])) {
+				return false;
+			}
+		}
+	}
+	return true;
 }
