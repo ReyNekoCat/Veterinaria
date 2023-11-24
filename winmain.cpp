@@ -2,6 +2,7 @@
 #include <iostream>
 #include <oleauto.h> // Librería para administrar fechas
 #include <commctrl.h>
+#include <windowsx.h>
 #include "resource.h"
 
 struct VETERINARIO {
@@ -22,7 +23,7 @@ struct VETERINARIOS {
 }LISTAVET;
 struct CITA {
 	int ClaveVet;
-	float Fecha;
+	double Fecha;
 	char NombreCliente[100];
 	int Telefono;
 	char Especie[20];
@@ -54,7 +55,7 @@ VETERINARIO* crearVet(char*, int, int, char*, char*);
 NODOVET* nuevoNodoVet(VETERINARIO*);
 void agregarVetFinal(VETERINARIO*);
 NODOVET* buscarPorClave(int);
-CITA* crearCita(int, float, char*, int, char*, char*, char*, char*, float);
+CITA* crearCita(HWND, int);
 NODOCITA* nuevoNodoCita(CITA*);
 void agregarCita(CITA*);
 
@@ -150,14 +151,6 @@ LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 	
-	HWND hName = GetDlgItem(hwnd, EDIT_NOMBRE);
-	HWND hTel = GetDlgItem(hwnd, EDIT_TEL);
-	HWND hMascota = GetDlgItem(hwnd, EDIT_MASCOTA);
-	HWND hEspecie = GetDlgItem(hwnd, CB_ESPECIE);
-	HWND hStatus = GetDlgItem(hwnd, CB_ESTATUS);
-	HWND hPrecio = GetDlgItem(hwnd, EDIT_PRECIO);
-	HWND hMotivo = GetDlgItem(hwnd, EDIT_MOTIVO);
-	HWND hArrayDatos[7] = { hName, hTel, hMascota, hEspecie, hStatus, hPrecio, hMotivo };
 
 	switch (msg) {
 	case WM_COMMAND: {
@@ -166,7 +159,7 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			return FALSE;
 		if (LOWORD(wParam) == BTN_CREAR && HIWORD(wParam) == BN_CLICKED) {
 			
-
+			HWND hName = GetDlgItem(hwnd, EDIT_NOMBRE);
 			int iTextLength = GetWindowTextLength(hName);
 			char name[100];
 			GetWindowText(hName, name, iTextLength+1);
@@ -184,16 +177,7 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		switch (ID) {
 			// Casos de Citas
 			case BTN_CREAR: {
-				char Nombre[100], NombreMascota[30], Motivo[500];
-				int Telefono, Especie, Estatus;
-				float Fecha, Costo;
-				GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName));
-				GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota));
-				GetDlgItemText(hwnd, EDIT_MOTIVO, Motivo, GetWindowTextLength(hMotivo));
-				GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
-				
-				//crearVet()
-
+				crearCita(hwnd, ActiveVet);
 			}break;
 
 
@@ -313,17 +297,42 @@ NODOVET* buscarPorClave(int buscar) {
 	}
 	return NULL;
 }
-CITA* crearCita(int claveVet, float fecha, char* nombreCliente, int telefono, char* especie, char* nombreMascota, char* motivo, char* estatus, float costo){
+CITA* crearCita(HWND hwnd, int claveVet){
+	HWND hFecha = GetDlgItem(hwnd, DTP_CREAR_FECHA);
+	HWND hHora = GetDlgItem(hwnd, DTP_CREAR_HORA);
+	HWND hName = GetDlgItem(hwnd, EDIT_NOMBRE);
+	HWND hTel = GetDlgItem(hwnd, EDIT_TEL);
+	HWND hMascota = GetDlgItem(hwnd, EDIT_MASCOTA);
+	HWND hEspecie = GetDlgItem(hwnd, CB_ESPECIE);
+	HWND hStatus = GetDlgItem(hwnd, CB_ESTATUS);
+	HWND hPrecio = GetDlgItem(hwnd, EDIT_PRECIO);
+	HWND hMotivo = GetDlgItem(hwnd, EDIT_MOTIVO);
+
+	char Nombre[100], NombreMascota[30], Motivo[500], Especie[20], Estatus[20];
+	int Telefono; float Costo; double* fecha;
+	SYSTEMTIME* fechaCitas = { 0 };
+
+	GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName));
+	GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota));
+	GetDlgItemText(hwnd, EDIT_MOTIVO, Motivo, GetWindowTextLength(hMotivo));
+	GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
+	ComboBox_GetText(hEspecie, Especie, GetWindowTextLength(hEspecie));
+	ComboBox_GetText(hEspecie, Estatus, GetWindowTextLength(hStatus));
+	DateTime_GetSystemtime(hFecha, fechaCitas);
+	DateTime_GetSystemtime(hHora, fechaCitas);
+	SystemTimeToVariantTime(fechaCitas, fecha);
+
+	// Ingreso a la lista
 	CITA* nuevo = new CITA;
 	nuevo->ClaveVet = claveVet;
-	nuevo->Fecha = fecha;
-	strcpy_s(nuevo->NombreCliente, 100, nombreCliente);	
-	nuevo->Telefono = telefono;
-	strcpy_s(nuevo->Especie, 20, especie);
-	strcpy_s(nuevo->NombreMascota, 30, nombreMascota);
-	strcpy_s(nuevo->Motivo, 500, motivo);
-	strcpy_s(nuevo->Estatus, 20, estatus);
-	nuevo->Costo = costo;
+	nuevo->Fecha = *fecha;
+	strcpy_s(nuevo->NombreCliente, 100, Nombre);	
+	nuevo->Telefono = Telefono;
+	strcpy_s(nuevo->Especie, 20, Especie);
+	strcpy_s(nuevo->NombreMascota, 30, NombreMascota);
+	strcpy_s(nuevo->Motivo, 500, Motivo);
+	strcpy_s(nuevo->Estatus, 20, Estatus);
+	nuevo->Costo = 200; //WIP
 	return nuevo;
 }
 NODOCITA* nuevoNodoCita(CITA* dato) {
