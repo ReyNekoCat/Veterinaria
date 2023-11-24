@@ -76,6 +76,11 @@
 #define MENU_CITAS_NUEVA                40017
 #define MENU_CITAS_MODIFICAR            40018
 #define MENU_CITAS_ELIMINAR             40019
+#define ID_SALIR_CERRARPROGRAMA         40020
+#define ID_SALIR_CERRARPROGRAMA40021    40021
+#define ID_SALIR_LOG                    40022
+#define ID_SALIR_LOGOUT                 40023
+#define ID_SALIR_EXIT                   40024
 #define MENU_PERFIL_MODIFICAR           40025
 #define MENU_PERFIL_CREAR               40026
 #define MENU_AGENDA_PORFECHA            40027
@@ -86,7 +91,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        110
-#define _APS_NEXT_COMMAND_VALUE         40020
+#define _APS_NEXT_COMMAND_VALUE         40025
 #define _APS_NEXT_CONTROL_VALUE         1051
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
