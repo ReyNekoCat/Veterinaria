@@ -45,36 +45,29 @@ bool ValidarLetras(const char* Letra, int Vacio) {
 	if (Vacio < 1) {
 		MessageBox(NULL, "No se admiten espacios en blanco", "Info", MB_OK | MB_ICONERROR); 
 		return false;
-	}
-	// Itera a través de cada carácter 
-	for (int i = 0; Letra[i] != '\0'; ++i) {
-		// Verifica si el carácter no es una letra 
-		if (!isalpha(Letra[i]) && !isspace(Letra[i])) {  
-			// Si encuentra un carácter no válido, muestra un mensaje de error y devuelve false
-			MessageBox(NULL, "Ingresa datos validos", "Error", MB_OK | MB_ICONERROR);
-			return false;
+	}else {
+		for (int i = 0; Letra[i] != '\0'; ++i) { 
+			if (!isalpha(Letra[i]) && !isspace(Letra[i])) {
+				// Si encuentra un carácter no válido, muestra un mensaje de error y devuelve false
+				MessageBox(NULL, "Ingresa datos validos", "Error", MB_OK | MB_ICONERROR);
+				return false;
+			}
 		}
 	}
-
-	// Si todos los caracteres son letras, devuelve true
+		
+	
 	return true;
 }
-bool ValidarNumeros(int CEDULA, int CLAVE, int CONTRASEÑA, int VACIO) {
-	if (VACIO < 1) {
-		MessageBox(NULL, "Ingrese los datos necesarios", "Info", MB_OK | MB_ICONERROR);
+bool ValidarNumeros(int CEDULA, int CLAVE, int PASSWORD) {
+	if (CEDULA>8||CEDULA<7) {		
 		return false;
-	}
-	
-		// Verifica si el carácter no es una letra 
-		if (CEDULA>8||CEDULA<7) {
-			// Si encuentra un carácter no válido, muestra un mensaje de error y devuelve false
-			MessageBox(NULL, "La CEDULA no debe ser mayor a 8 digitos y menor que 7 digitos", "Error", MB_OK | MB_ICONERROR);
-			return false;
-		}
-	
-
-
-	return true;
+	}else if (CLAVE != 3) {	
+		return false;
+	}else if(PASSWORD > 8 || PASSWORD < 1){
+		return false;
+	}else {
+		return true;
+	}		
 }
 HINSTANCE hInst;  // Instancia actual
 int ActiveVet = 000; // Veterinario actual (Bruh)
@@ -227,61 +220,23 @@ LRESULT CALLBACK PerfilCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 				else { 
 					//logica para guardar
 
-
-
 				}
-
-
 				//validacion de cedula
 				HWND hCEDULA = GetDlgItem(hwnd, EDIT_CEDULA);
-				iTextLength = GetWindowTextLength(hCEDULA);
-				if (!ValidarNumeros(iTextLength, 0, 0, iTextLength)) {
-
-				}
-				
-
-				/* 
+				int LengthCEDULA = GetWindowTextLength(hCEDULA);
 				//validacion de clave de usuario
-				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_VET_NOMBRE);
-				int iTextLength = GetWindowTextLength(hVET_NOMBRE);
-				char wVET_NOMBRE[100];
-				GetDlgItemText(hwnd, EDIT_VET_NOMBRE, wVET_NOMBRE, 100);
-				GetWindowText(hVET_NOMBRE, wVET_NOMBRE, iTextLength + 1);
-				if (!ValidarLetras(wVET_NOMBRE, iTextLength)) {
-					break;
-				}
-				else {
-					//logica para guardar
-
-
-
-				}
-
-
+				HWND hCLAVE = GetDlgItem(hwnd, EDIT_CLAVE); 
+				int LengthCLAVE = GetWindowTextLength(hCLAVE); 
 				//validacion de contraseña
-				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_VET_NOMBRE);
-				int iTextLength = GetWindowTextLength(hVET_NOMBRE);
-				char wVET_NOMBRE[100];
-				GetDlgItemText(hwnd, EDIT_VET_NOMBRE, wVET_NOMBRE, 100);
-				GetWindowText(hVET_NOMBRE, wVET_NOMBRE, iTextLength + 1);
-				if (!ValidarLetras(wVET_NOMBRE, iTextLength)) {
-					break;
+				HWND hCONTRASEÑA = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD); 
+
+				int LengthPASS = GetWindowTextLength(hCONTRASEÑA); 
+				if (!ValidarNumeros(LengthCEDULA, 3, 5) || !ValidarNumeros(8, LengthCLAVE, 5)|| !ValidarNumeros(8, 3, LengthPASS)) { 
+					MessageBox(NULL, "Datos no validos", "Error", MB_OK | MB_ICONERROR); 
+				}else{ 
+					MessageBox(NULL, "Tus datos han sido ingresados correctamente", "Bienvenido!!!", MB_OK | MB_ICONINFORMATION);
 				}
-				else {
-					//logica para guardar
-
-
-
-				}
-				*/
-				
-				  
-
-
-
-
-
-
+		
 			}break;
 		case WM_CLOSE: 
 		case WM_DESTROY: { 
