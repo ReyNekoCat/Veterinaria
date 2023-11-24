@@ -64,6 +64,8 @@ NODOCITA* nuevoNodoCita(CITA*);
 void agregarCita(CITA*);
 bool ValidarLetras(const char*, int);
 bool ValidarNumeros(const char*, int, const char*, int, int);
+bool ValidarTelefono(const char*, int);
+bool ValidarPrecio(const char*, int);
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 
@@ -162,28 +164,44 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
 		if (Menu(ID, hwnd))
-			return FALSE;
-		if (LOWORD(wParam) == BTN_CREAR && HIWORD(wParam) == BN_CLICKED) {
-			
-			HWND hName = GetDlgItem(hwnd, EDIT_NOMBRE);
-			int iTextLength = GetWindowTextLength(hName);
-			char name[100];
-			GetWindowText(hName, name, iTextLength+1);
-			
-			if (iTextLength < 1) {
-				MessageBox(NULL, "Ingresa datos", "Error", MB_OK);
-			}
-			else {
-				//Guardar la info
-
-				MessageBox(NULL, name, "Error", MB_OK);
-			}
-
-		}
+			return FALSE;		
+		
 		switch (ID) {
 			// Casos de Citas
 			case BTN_CREAR: {
-				agregarCita(crearCita(hwnd, ActiveVet));
+				//Validar Nombre del dueño
+				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE); 
+				int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE); 
+				char wVET_NOMBRE[100];  
+				GetDlgItemText(hwnd, EDIT_NOMBRE, wVET_NOMBRE, 100); 
+				GetWindowText(hVET_NOMBRE, wVET_NOMBRE, Length_NOMBRE + 1); 
+				//Validad nombre de la mascota
+				HWND hCITA_MASCOTA = GetDlgItem(hwnd, EDIT_MASCOTA); 
+				int Length_MASCOTA = GetWindowTextLength(hCITA_MASCOTA); 
+				char wCITA_MASCOTA[100];  
+				GetDlgItemText(hwnd, EDIT_MASCOTA, wCITA_MASCOTA, 100); 
+				GetWindowText(hCITA_MASCOTA, wCITA_MASCOTA, Length_MASCOTA + 1);  
+				//Validar numero telefonico 
+				HWND hTEL = GetDlgItem(hwnd, EDIT_TEL);  
+				int LengthTEL = GetWindowTextLength(hTEL);
+				char wTEL[20];
+				GetDlgItemText(hwnd, EDIT_TEL, wTEL, 20);  
+				GetWindowText(hTEL, wTEL, LengthTEL + 1); 
+				//Validar precio
+				HWND hPRECIO = GetDlgItem(hwnd, EDIT_PRECIO); 
+				int LengthPRECIO = GetWindowTextLength(hPRECIO);   
+				char wPRECIO[1000];  
+				GetDlgItemText(hwnd, EDIT_PRECIO, wPRECIO, 1000); 
+				GetWindowText(hPRECIO, wPRECIO, LengthPRECIO + 1); 
+
+				if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE)|| !ValidarLetras(wCITA_MASCOTA, Length_MASCOTA)|| !ValidarTelefono(wTEL, LengthTEL)||!ValidarPrecio(wPRECIO, LengthPRECIO)) {
+					break;
+				}else {
+					MessageBox(NULL, "La cita ha sido agregada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION); 
+
+					//agregarCita(crearCita(hwnd, ActiveVet));
+				}
+
 			}break;
 
 
@@ -604,6 +622,42 @@ bool ValidarNumeros(const char* cCEDULA, int CEDULA, const char* cCLAVE, int  CL
 				return false;
 			}
 		}
+	}
+	return true;
+}
+bool ValidarTelefono(const char* cTEL, int TELEFONO) {
+	for (int i = 0; cTEL[i] != '\0'; ++i) { 
+		if (!isdigit(cTEL[i])) {  
+			return false;
+		}
+	}
+	if (TELEFONO==8 ||TELEFONO == 10||TELEFONO == 12) {
+		return true;
+	}	else {
+		MessageBox(NULL, "Ingresa un Numero Telefonico valido", "Info", MB_OK | MB_ICONERROR);
+		return false;
+		
+	}
+	return true;
+}
+bool ValidarPrecio(const char* cPRECIO, int PRECIO) {
+	if (PRECIO < 1) {
+		MessageBox(NULL, "Ingresa un precio valido", "Info", MB_OK | MB_ICONERROR); 
+		return false;
+	}
+	int Contador = 0;
+	for (int i = 0; cPRECIO[i] != '\0'; ++i) {
+		if (!isdigit(cPRECIO[i])&&cPRECIO[i]!=46) {
+			MessageBox(NULL, "No se aceptan valores negativos o caracteres extraños", "Info", MB_OK | MB_ICONERROR);
+			return false;
+		}
+		if(!isdigit(cPRECIO[i])) { 
+			Contador++;
+		}		
+	}
+	if (Contador!=0 && Contador != 1){
+		MessageBox(NULL, "Ingresa un precio valido", "Info", MB_OK | MB_ICONERROR);
+		return false;
 	}
 	return true;
 }
