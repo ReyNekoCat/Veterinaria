@@ -1,12 +1,13 @@
 #include <Windows.h>
 #include <iostream>
-#include <oleauto.h> // Librería para administrar fechas
+#include <oleauto.h> // LibrerÃ­a para administrar fechas
 #include <commctrl.h>
 #include <windowsx.h>
+#include <fstream> 
 #include <string>
 #include "resource.h"
-
-// Declaración de estructuras
+using namespace std;
+// DeclaraciÃ³n de estructuras
 struct VETERINARIO {
 	char Nombre[100];
 	int Cedula;
@@ -49,7 +50,7 @@ struct CITAS {
 HINSTANCE hInst;  // Instancia actual
 int ActiveVet = 000; // Veterinario actual (Bruh)
 
-// Declaración de funciones
+// DeclaraciÃ³n de funciones
 LRESULT CALLBACK LoginCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK AgendaCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK CitasCallback(HWND, UINT, WPARAM, LPARAM);
@@ -71,19 +72,52 @@ NODOCITA* buscarCitaPorDia(int, double);
 NODOCITA* buscarCitaPorFecha(int, double);
 CITAS* crearTempListaCitaPorDia(int, double);
 
+bool CargarVETBIN(VETERINARIOS& listaVeterinarios) { 
+	ifstream archivo("Info de veterinarios.bin", ios::binary);
+	if (!archivo.is_open()) {
+		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
+		return false;
+	}
+
+	archivo.seekg(0, ios::end);
+	unsigned int bytes = archivo.tellg();
+	archivo.seekg(0, ios::beg);
+
+	unsigned int lectura = 0;
+	while (lectura < bytes) {
+		VETERINARIO temp;
+		archivo.read(reinterpret_cast<char*>(&temp), sizeof(VETERINARIO));
+
+		agregarVetFinal(crearVet(temp.Nombre, temp.Cedula, temp.Clave, temp.FotoRuta, temp.Password));
+
+		lectura += sizeof(VETERINARIO);
+	}
+
+	archivo.close();
+	return (lectura > 0);
+}
+
+void GuardarVETBIN(); 
+
 bool ValidarLetras(const char*, int);
 bool ValidarNumeros(const char*, int, const char*, int, int);
 bool ValidarTelefono(const char*, int);
 bool ValidarPrecio(const char*, int);
 
-// Función principal/Callbacks/Menu
+// FunciÃ³n principal/Callbacks/Menu
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 
-	//Inicialización
+	//InicializaciÃ³n
 	HWND hWindow = CreateDialog(hInst, MAKEINTRESOURCE(DLG_LOGIN), NULL, LoginCallback);
 	MSG Msg;
 	ZeroMemory(&Msg, sizeof(Msg));
-	agregarVetFinal(crearVet((char*)"Administrador", 1234567, 001, (char*)"X", (char*)"1"));
+
+	if (CargarVETBIN(LISTAVET)) {
+
+	}
+	else {
+		agregarVetFinal(crearVet((char*)"Administrador", 1234567, 001, (char*)"X", (char*)"1"));
+	}	
 	LISTACITA.Origen = NULL;
 	LISTACITA.Fin = NULL;
 
@@ -119,13 +153,13 @@ LRESULT CALLBACK LoginCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 							ShowWindow(window, SW_SHOW);
 							EndDialog(hwnd, 0);
 						}else
-							MessageBox(hwnd, "Contraseña inválida", "Vuelva a intentarlo", MB_OK);						
+							MessageBox(hwnd, "ContraseÃ±a invÃ¡lida", "Vuelva a intentarlo", MB_OK);						
 					}else
-						MessageBox(hwnd, "Ingrese un usuario válido", "No se encontró el usuario", MB_OK);
+						MessageBox(hwnd, "Ingrese un usuario vÃ¡lido", "No se encontrÃ³ el usuario", MB_OK);
 				}break;
 				case WM_CLOSE:
 				case WM_DESTROY: {
-					int result = MessageBox(hwnd, "¿Desea cerrar el programa?", "Advertencia", 1);
+					int result = MessageBox(hwnd, "Â¿Desea cerrar el programa?", "Advertencia", 1);
 					if (result != 1)
 						break;
 					PostQuitMessage(0);
@@ -212,7 +246,7 @@ LRESULT CALLBACK CitasCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 		switch (ID) {
 			// Casos de Citas
 			case BTN_CREAR: {
-				//Validar Nombre del dueño
+				//Validar Nombre del dueÃ±o
 				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE); 
 				int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE); 
 				char wVET_NOMBRE[100];  
@@ -246,7 +280,7 @@ LRESULT CALLBACK CitasCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 				}
 			}break;
 			case BTN_MODIFICAR: {
-				//Validar Nombre del dueño
+				//Validar Nombre del dueÃ±o
 				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE);
 				int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
 				char wVET_NOMBRE[100];
@@ -281,7 +315,7 @@ LRESULT CALLBACK CitasCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 				}
 			}break;
 			case BTN_ELIMINAR: {
-				//Validar Nombre del dueño
+				//Validar Nombre del dueÃ±o
 				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE);
 				int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
 				char wVET_NOMBRE[100];
@@ -386,7 +420,7 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 		}break;
 		}break;
 		case BTN_MODIFICAR: {
-			//Validar Nombre del dueño
+			//Validar Nombre del dueÃ±o
 			HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE);
 			int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
 			char wVET_NOMBRE[100];
@@ -421,7 +455,7 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 			}
 		}break;
 		case BTN_ELIMINAR: {
-			//Validar Nombre del dueño
+			//Validar Nombre del dueÃ±o
 			HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE);
 			int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
 			char wVET_NOMBRE[100];
@@ -543,9 +577,9 @@ LRESULT CALLBACK PerfilModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 				char wCLAVE[20];
 				GetDlgItemText(hwnd, EDIT_CLAVE, wCLAVE, 20);
 				GetWindowText(hCLAVE, wCLAVE, LengthCLAVE + 1);
-				//validacion de contraseña
-				HWND hCONTRASEÑA = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD);
-				int LengthPASS = GetWindowTextLength(hCONTRASEÑA);
+				//validacion de contraseÃ±a
+				HWND hCONTRASEÃ‘A = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD);
+				int LengthPASS = GetWindowTextLength(hCONTRASEÃ‘A);
 				if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE)) {
 					break;
 				}
@@ -559,14 +593,14 @@ LRESULT CALLBACK PerfilModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 					GetDlgItemText(hwnd, EDIT_DIRECCION, wRUTA, 200);
 					GetWindowText(hRUTA, wRUTA, GetWindowTextLength(hRUTA)+1);
 					GetDlgItemText(hwnd, EDIT_PERFIL_PASSWORD_CREAR, wPASSWORD, 20);
-					GetWindowText(hCONTRASEÑA, wPASSWORD, GetWindowTextLength(hCONTRASEÑA) + 1);
+					GetWindowText(hCONTRASEÃ‘A, wPASSWORD, GetWindowTextLength(hCONTRASEÃ‘A) + 1);
 					modVet(wVET_NOMBRE, GetDlgItemInt(hwnd, EDIT_CEDULA, NULL, NULL), GetDlgItemInt(hwnd, EDIT_CLAVE, NULL, NULL), wRUTA, wPASSWORD);
 					MessageBox(NULL, "Tus datos han sido modificados correctamente", "Bienvenido!!!", MB_OK | MB_ICONINFORMATION);
 				}
 			}break;
 			case WM_CLOSE: 
 			case WM_DESTROY: { 
-				int result = MessageBox(hwnd, "¿Desea cerrar el programa?", "Advertencia", 1); 
+				int result = MessageBox(hwnd, "Â¿Desea cerrar el programa?", "Advertencia", 1); 
 				if (result != 1)
 					break;
 				PostQuitMessage(0); 
@@ -637,9 +671,9 @@ LRESULT CALLBACK PerfilCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 			char wCLAVE[20];
 			GetDlgItemText(hwnd, EDIT_CLAVE, wCLAVE, 20);
 			GetWindowText(hCLAVE, wCLAVE, LengthCLAVE + 1);
-			//validacion de contraseña
-			HWND hCONTRASEÑA = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD_CREAR);
-			int LengthPASS = GetWindowTextLength(hCONTRASEÑA);
+			//validacion de contraseÃ±a
+			HWND hCONTRASEÃ‘A = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD_CREAR);
+			int LengthPASS = GetWindowTextLength(hCONTRASEÃ‘A);
 			if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE)) {
 				break;
 			}
@@ -653,14 +687,14 @@ LRESULT CALLBACK PerfilCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 				GetDlgItemText(hwnd, EDIT_DIRECCION_CREAR, wRUTA, 200);
 				GetWindowText(hRUTA, wRUTA, GetWindowTextLength(hRUTA) + 1);
 				GetDlgItemText(hwnd, EDIT_PERFIL_PASSWORD_CREAR, wPASSWORD, 20);
-				GetWindowText(hCONTRASEÑA, wPASSWORD, GetWindowTextLength(hCONTRASEÑA) + 1);
+				GetWindowText(hCONTRASEÃ‘A, wPASSWORD, GetWindowTextLength(hCONTRASEÃ‘A) + 1);
 				agregarVetFinal(crearVet(wVET_NOMBRE, GetDlgItemInt(hwnd, EDIT_CEDULA_CREAR, NULL, NULL), GetDlgItemInt(hwnd, EDIT_CLAVE_CREAR, NULL, NULL), wRUTA, wPASSWORD));
 				MessageBox(NULL, "Los datos del nuevo veterinario se han guardado", "Perfil creado con exito!!!", MB_OK | MB_ICONINFORMATION);		
 			}
 		}break;
 		case WM_CLOSE:
 		case WM_DESTROY: {
-			int result = MessageBox(hwnd, "¿Desea cerrar el programa?", "Advertencia", 1);
+			int result = MessageBox(hwnd, "Â¿Desea cerrar el programa?", "Advertencia", 1);
 			if (result != 1)
 				break;
 			PostQuitMessage(0);
@@ -709,7 +743,7 @@ BOOL Menu(INT opcion, HWND window0) {
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case ID_SALIR_LOGOUT: {
-			int result = MessageBox(window0, "¿Desea cerrar sesión?", "Advertencia", 1);
+			int result = MessageBox(window0, "Â¿Desea cerrar sesiÃ³n?", "Advertencia", 1);
 			if (result != 1)
 				break;
 			DestroyWindow(window0);
@@ -717,7 +751,8 @@ BOOL Menu(INT opcion, HWND window0) {
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case ID_SALIR_EXIT: {
-			int result = MessageBox(window0, "¿Desea cerrar el programa?", "Advertencia", 1);
+			GuardarVETBIN();
+			int result = MessageBox(window0, "Â¿Desea cerrar el programa?", "Advertencia", 1);
 			if (result != 1)
 				break;
 			PostQuitMessage(0);
@@ -726,7 +761,7 @@ BOOL Menu(INT opcion, HWND window0) {
 	}return TRUE;
 }
 
-// Funciones de creación/busqueda/modificación
+// Funciones de creaciÃ³n/busqueda/modificaciÃ³n
 VETERINARIO* crearVet(char* nombre, int cedula, int clave, char* fotoRuta, char* password) {
 	VETERINARIO* nuevo = new VETERINARIO;
 	strcpy_s(nuevo->Nombre, 100, nombre);
@@ -885,7 +920,7 @@ void deleteCita(HWND hwnd, int claveVet) {
 
 	NODOCITA* nodo = buscarCitaPorFecha(claveVet, fecha);
 
-	// Extracción de la lista
+	// ExtracciÃ³n de la lista
 	if (nodo == LISTACITA.Origen || nodo == LISTACITA.Fin) {
 		LISTACITA.Origen = NULL;
 		LISTACITA.Fin = NULL;
@@ -1007,7 +1042,7 @@ CITAS* crearTempListaCitaPorDia(int claveVet, double dia) {
 	return temp;
 }
 
-// Funciones de validación
+// Funciones de validaciÃ³n
 bool ValidarLetras(const char* Letra, int Vacio) {
 	if (Vacio < 1) {
 		MessageBox(NULL, "No se admiten espacios en blanco", "Info", MB_OK | MB_ICONERROR);
@@ -1016,7 +1051,7 @@ bool ValidarLetras(const char* Letra, int Vacio) {
 	else {
 		for (int i = 0; Letra[i] != '\0'; ++i) {
 			if (!isalpha(Letra[i]) && !isspace(Letra[i])) {
-				// Si encuentra un carácter no válido, muestra un mensaje de error y devuelve false
+				// Si encuentra un carÃ¡cter no vÃ¡lido, muestra un mensaje de error y devuelve false
 				MessageBox(NULL, "Ingresa datos validos", "Error", MB_OK | MB_ICONERROR);
 				return false;
 			}
@@ -1073,7 +1108,7 @@ bool ValidarPrecio(const char* cPRECIO, int PRECIO) {
 	int Contador = 0;
 	for (int i = 0; cPRECIO[i] != '\0'; ++i) {
 		if (!isdigit(cPRECIO[i])&&cPRECIO[i]!=46) {
-			MessageBox(NULL, "No se aceptan valores negativos o caracteres extraños", "Info", MB_OK | MB_ICONERROR);
+			MessageBox(NULL, "No se aceptan valores negativos o caracteres extraÃ±os", "Info", MB_OK | MB_ICONERROR);
 			return false;
 		}
 		if(!isdigit(cPRECIO[i])) { 
@@ -1085,4 +1120,33 @@ bool ValidarPrecio(const char* cPRECIO, int PRECIO) {
 		return false;
 	}
 	return true;
+
+}
+
+
+
+//Funcion par a guardar en archivos binarios
+void GuardarVETBIN() {
+	ofstream archivo("Info de veterinarios.bin", ios::binary | ios::out | ios::trunc);
+	if (!archivo.is_open()) {
+		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
+		return;
+	}
+
+	NODOVET* actual = LISTAVET.Origen;
+	while (actual != NULL) {
+		if (archivo.bad()) {
+			MessageBox(NULL, "OcurriÃ³ un error durante la escritura", "Error", MB_OK | MB_ICONERROR);
+			return;
+		}
+
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Nombre), sizeof(actual->Dato->Nombre));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Cedula), sizeof(actual->Dato->Cedula));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Clave), sizeof(actual->Dato->Clave));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->FotoRuta), sizeof(actual->Dato->FotoRuta));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Password), sizeof(actual->Dato->Password));
+
+		actual = actual->Siguiente;
+	}
+	archivo.close();
 }
