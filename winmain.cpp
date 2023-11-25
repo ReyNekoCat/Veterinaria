@@ -532,7 +532,15 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 							ComboBox_AddString(hCBhora, (LPARAM)buff);
 							TempCita = TempCita->Siguiente;
 						}
-				}break;
+				}
+									   HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
+									   ComboBox_GetCurSel(hDTPdia);
+				
+				if (opc >= 0) {
+					WCHAR text[255] = { 0 };
+					SendMessage(GetDlgItem(hwnd, CB_MODIFICAR_HORA), CB_GETLBTEXT, opc, (LPARAM)text);
+				}
+		
 			}break;
 			case BTN_MODIFICAR: {
 				//Validar Nombre del dueño
