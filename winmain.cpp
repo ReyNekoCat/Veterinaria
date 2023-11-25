@@ -27,11 +27,9 @@ struct VETERINARIOS {
 }LISTAVET;
 struct CITA {
 	int ClaveVet;
-	SYSTEMTIME* Dia;
-	SYSTEMTIME* Hora;
-	double Fecha;
-	char NombreCliente[100];
 	int Telefono;
+	double Fecha;
+	char NombreCliente[100];	
 	char Especie[20];
 	char NombreMascota[30];
 	char Motivo[500];
@@ -97,9 +95,37 @@ bool CargarVETBIN(VETERINARIOS& listaVeterinarios) {
 	archivo.close();
 	return (lectura > 0);
 }
+bool CargarCITABIN(VETERINARIOS& listadeCitas) {
+	ifstream archivo("Info de citas.bin", ios::binary);
+	if (!archivo.is_open()) {
+		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
+		return false;
+	}
+
+	archivo.seekg(0, ios::end);
+	unsigned int bytes = archivo.tellg();
+	archivo.seekg(0, ios::beg);
+
+	unsigned int lectura = 0;
+	while (lectura < bytes) {
+		CITA temp;
+
+		archivo.read(reinterpret_cast<char*>(&temp), sizeof(CITA));
+
+		agregarCita(crearCita(temp.ClaveVet, temp.Telefono, temp.Fecha, temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo));
+
+		lectura += sizeof(CITA);
+
+
+	}
+
+	archivo.close();
+	return (lectura > 0);
+}
+
 
 void GuardarVETBIN(); 
-
+void GuardarCITABIN();
 bool ValidarLetras(const char*, int);
 bool ValidarNumeros(const char*, int, const char*, int, int);
 bool ValidarTelefono(const char*, int);
@@ -1149,3 +1175,35 @@ void GuardarVETBIN() {
 	}
 	archivo.close();
 }
+
+////GUARDAR CITAS////
+void GuardarCITABIN() { 
+
+	ofstream archivo("Info de citas.bin", ios::binary | ios::out | ios::trunc);
+	if (!archivo.is_open()) {
+		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
+		return;
+	}
+
+	NODOCITA* actual = LISTACITA.Origen;  
+	while (actual != NULL) {
+		if (archivo.bad()) {
+			MessageBox(NULL, "Ocurrió un error durante la escritura", "Error", MB_OK | MB_ICONERROR);
+			return;
+		}
+
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->ClaveVet), sizeof(actual->Dato->ClaveVet));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Telefono), sizeof(actual->Dato->Telefono));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Fecha), sizeof(actual->Dato->Fecha));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->NombreCliente), sizeof(actual->Dato->NombreCliente));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Especie), sizeof(actual->Dato->Especie));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->NombreMascota), sizeof(actual->Dato->NombreMascota));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Motivo), sizeof(actual->Dato->Motivo));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Estatus), sizeof(actual->Dato->Estatus));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Costo), sizeof(actual->Dato->Costo)); 
+		
+		actual = actual->Siguiente;
+	} 
+	archivo.close(); 
+} 
+
