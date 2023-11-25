@@ -62,8 +62,11 @@ NODOVET* nuevoNodoVet(VETERINARIO*);
 void agregarVetFinal(VETERINARIO*);
 NODOVET* buscarPorClave(int);
 CITA* crearCita(HWND, int);
+void modCita(HWND, int);
 NODOCITA* nuevoNodoCita(CITA*);
 void agregarCita(CITA*);
+NODOCITA* buscarCitaPorDia(int claveVet, SYSTEMTIME* dia);
+NODOCITA* buscarCitaPorFecha(int claveVet, int fecha);
 
 bool ValidarLetras(const char*, int);
 bool ValidarNumeros(const char*, int, const char*, int, int);
@@ -215,12 +218,9 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 				if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE)|| !ValidarLetras(wCITA_MASCOTA, Length_MASCOTA)|| !ValidarTelefono(wTEL, LengthTEL)||!ValidarPrecio(wPRECIO, LengthPRECIO)) {
 					break;
 				}else {
-					// Agrega funciones para guardar los datos//
-
-
+					// Guardado de datos nuevos
+					agregarCita(crearCita(hwnd, ActiveVet));
 					MessageBox(NULL, "La cita ha sido agregada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION); 
-
-					//agregarCita(crearCita(hwnd, ActiveVet));
 				}
 
 			}break;
@@ -254,8 +254,8 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 					break;
 				}
 				else {
-					// Guardado de datos
-					agregarCita(crearCita(hwnd, ActiveVet));
+					// Guardado de datos modificados
+					modCita(hwnd, ActiveVet);
 					MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);				
 				}
 
@@ -598,7 +598,7 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	HWND hPrecio = GetDlgItem(hwnd, EDIT_PRECIO);
 	HWND hMotivo = GetDlgItem(hwnd, EDIT_MOTIVO);
 
-	char Nombre[100], NombreMascota[30], Motivo[500], Especie[20], Estatus[20];
+	char Nombre[100], NombreMascota[30], Motivo[500], Especie[20], Estatus[20], Precio[10];
 	int Telefono = 0; float Costo = 0; 
 	double hora = 0;
 	double dia = 0;
@@ -609,6 +609,7 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName));
 	GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota));
 	GetDlgItemText(hwnd, EDIT_MOTIVO, Motivo, GetWindowTextLength(hMotivo));
+	GetDlgItemText(hwnd, EDIT_PRECIO, Precio, GetWindowTextLength(hPrecio));
 	GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
 	ComboBox_GetText(hEspecie, Especie, GetWindowTextLength(hEspecie));
 	ComboBox_GetText(hEspecie, Estatus, GetWindowTextLength(hStatus));
@@ -621,15 +622,60 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	// Ingreso a la lista
 	CITA* nuevo = new CITA;
 	nuevo->ClaveVet = claveVet;
-	nuevo->Fecha = fecha; // fecha sería el VariantTime completo
+	nuevo->Dia = &diaCitas;
+	nuevo->Hora = &horaCitas;
+	nuevo->Fecha = fecha;
 	strcpy_s(nuevo->NombreCliente, 100, Nombre);	
 	nuevo->Telefono = Telefono;
 	strcpy_s(nuevo->Especie, 20, Especie);
 	strcpy_s(nuevo->NombreMascota, 30, NombreMascota);
 	strcpy_s(nuevo->Motivo, 500, Motivo);
 	strcpy_s(nuevo->Estatus, 20, Estatus);
-	nuevo->Costo = 200; //WIP
+	nuevo->Costo = atof(Precio); //Probar
 	return nuevo;
+}
+void modCita(HWND hwnd, int claveVet) {
+	HWND hDia = GetDlgItem(hwnd, DTP_CREAR_FECHA);
+	HWND hHora = GetDlgItem(hwnd, DTP_CREAR_HORA);
+	HWND hName = GetDlgItem(hwnd, EDIT_NOMBRE);
+	HWND hTel = GetDlgItem(hwnd, EDIT_TEL);
+	HWND hMascota = GetDlgItem(hwnd, EDIT_MASCOTA);
+	HWND hEspecie = GetDlgItem(hwnd, CB_ESPECIE);
+	HWND hStatus = GetDlgItem(hwnd, CB_ESTATUS);
+	HWND hPrecio = GetDlgItem(hwnd, EDIT_PRECIO);
+	HWND hMotivo = GetDlgItem(hwnd, EDIT_MOTIVO);
+
+	char Nombre[100], NombreMascota[30], Motivo[500], Especie[20], Estatus[20], Precio[10];
+	int Telefono = 0; float Costo = 0;
+	double hora = 0;
+	double dia = 0;
+	double fecha = 0;
+	SYSTEMTIME diaCitas = { 0 };
+	SYSTEMTIME horaCitas = { 0 };
+
+	GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName));
+	GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota));
+	GetDlgItemText(hwnd, EDIT_MOTIVO, Motivo, GetWindowTextLength(hMotivo));
+	GetDlgItemText(hwnd, EDIT_PRECIO, Precio, GetWindowTextLength(hPrecio));
+	GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
+	ComboBox_GetText(hEspecie, Especie, GetWindowTextLength(hEspecie));
+	ComboBox_GetText(hEspecie, Estatus, GetWindowTextLength(hStatus));
+	DateTime_GetSystemtime(hDia, &diaCitas);
+	DateTime_GetSystemtime(hHora, &horaCitas); // Aqui
+	SystemTimeToVariantTime(&diaCitas, &dia);
+	SystemTimeToVariantTime(&horaCitas, &hora);
+	fecha = ((int)dia) + (hora - ((int)hora));
+	NODOCITA* original = buscarCitaPorFecha(claveVet, fecha);
+
+	// Ingreso a la lista
+	original->Dato->Fecha = fecha;
+	strcpy_s(original->Dato->NombreCliente, 100, Nombre);
+	original->Dato->Telefono = Telefono;
+	strcpy_s(original->Dato->Especie, 20, Especie);
+	strcpy_s(original->Dato->NombreMascota, 30, NombreMascota);
+	strcpy_s(original->Dato->Motivo, 500, Motivo);
+	strcpy_s(original->Dato->Estatus, 20, Estatus);
+	original->Dato->Costo = atof(Precio); //Probar
 }
 NODOCITA* nuevoNodoCita(CITA* dato) {
 	NODOCITA* nodo = new NODOCITA;
@@ -684,6 +730,19 @@ NODOCITA* buscarCitaPorDia(int claveVet, SYSTEMTIME* dia) {
 	}
 	return NULL;
 	
+}
+NODOCITA* buscarCitaPorFecha(int claveVet, int fecha){
+	if (LISTACITA.Origen == NULL)
+		return NULL;
+	NODOCITA* indice = LISTACITA.Origen;
+
+	while (indice != NULL) {
+		if (indice->Dato->Fecha == fecha) {
+			return indice;
+		}
+		indice = indice->Siguiente;
+	}
+	return NULL;
 }
 
 // Funciones de validación
