@@ -7,6 +7,7 @@
 #include <string>
 #include "resource.h"
 using namespace std;
+
 // Declaración de estructuras
 struct VETERINARIO {
 	char Nombre[100];
@@ -578,8 +579,8 @@ LRESULT CALLBACK PerfilModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 				GetDlgItemText(hwnd, EDIT_CLAVE, wCLAVE, 20);
 				GetWindowText(hCLAVE, wCLAVE, LengthCLAVE + 1);
 				//validacion de contraseña
-				HWND hCONTRASEÑA = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD);
-				int LengthPASS = GetWindowTextLength(hCONTRASEÑA);
+				HWND hPASSWORD = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD);
+				int LengthPASS = GetWindowTextLength(hPASSWORD);
 				if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE)) {
 					break;
 				}
@@ -593,7 +594,7 @@ LRESULT CALLBACK PerfilModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 					GetDlgItemText(hwnd, EDIT_DIRECCION, wRUTA, 200);
 					GetWindowText(hRUTA, wRUTA, GetWindowTextLength(hRUTA)+1);
 					GetDlgItemText(hwnd, EDIT_PERFIL_PASSWORD_CREAR, wPASSWORD, 20);
-					GetWindowText(hCONTRASEÑA, wPASSWORD, GetWindowTextLength(hCONTRASEÑA) + 1);
+					GetWindowText(hPASSWORD, wPASSWORD, GetWindowTextLength(hPASSWORD) + 1);
 					modVet(wVET_NOMBRE, GetDlgItemInt(hwnd, EDIT_CEDULA, NULL, NULL), GetDlgItemInt(hwnd, EDIT_CLAVE, NULL, NULL), wRUTA, wPASSWORD);
 					MessageBox(NULL, "Tus datos han sido modificados correctamente", "Bienvenido!!!", MB_OK | MB_ICONINFORMATION);
 				}
@@ -672,8 +673,8 @@ LRESULT CALLBACK PerfilCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 			GetDlgItemText(hwnd, EDIT_CLAVE, wCLAVE, 20);
 			GetWindowText(hCLAVE, wCLAVE, LengthCLAVE + 1);
 			//validacion de contraseña
-			HWND hCONTRASEÑA = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD_CREAR);
-			int LengthPASS = GetWindowTextLength(hCONTRASEÑA);
+			HWND hPASSWORD = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD_CREAR);
+			int LengthPASS = GetWindowTextLength(hPASSWORD);
 			if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE)) {
 				break;
 			}
@@ -687,7 +688,7 @@ LRESULT CALLBACK PerfilCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 				GetDlgItemText(hwnd, EDIT_DIRECCION_CREAR, wRUTA, 200);
 				GetWindowText(hRUTA, wRUTA, GetWindowTextLength(hRUTA) + 1);
 				GetDlgItemText(hwnd, EDIT_PERFIL_PASSWORD_CREAR, wPASSWORD, 20);
-				GetWindowText(hCONTRASEÑA, wPASSWORD, GetWindowTextLength(hCONTRASEÑA) + 1);
+				GetWindowText(hPASSWORD, wPASSWORD, GetWindowTextLength(hPASSWORD) + 1);
 				agregarVetFinal(crearVet(wVET_NOMBRE, GetDlgItemInt(hwnd, EDIT_CEDULA_CREAR, NULL, NULL), GetDlgItemInt(hwnd, EDIT_CLAVE_CREAR, NULL, NULL), wRUTA, wPASSWORD));
 				MessageBox(NULL, "Los datos del nuevo veterinario se han guardado", "Perfil creado con exito!!!", MB_OK | MB_ICONINFORMATION);		
 			}
@@ -1122,8 +1123,6 @@ bool ValidarPrecio(const char* cPRECIO, int PRECIO) {
 	return true;
 
 }
-
-
 
 //Funcion par a guardar en archivos binarios
 void GuardarVETBIN() {
