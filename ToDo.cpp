@@ -1,45 +1,45 @@
 /*
  LOGIN
- - Cada médico puede con su clave de usuario y contraseña
- - Un usuario administrador que pueda crear más cuentas
+ - Cada médico puede ingresar con su clave de usuario y contraseña /HECHO
+ - Un usuario administrador que pueda crear más cuentas /FALTA VALIDACION
 
  MENU [Disponible en todas las pantallas]
- - Información de doctor que se conectó al programa
- - Manejo de Citas
- - Agenda
- - Salir
- - Mostrar el nombre y foto del doctor en todas las pantallas
+ - Información de doctor que se conectó al programa /HECHO
+ - Manejo de Citas /HECHO
+ - Agenda /HECHO
+ - Salir /HECHO
+ - Mostrar el nombre y foto del doctor en todas las pantallas /HECHO
 
  INFO [Debe poderse editar en cualquier momento]
- - Nombre completo del doctor
- - Cédula profesional
- - Foto (Mapa de bits)
- - Clave de usuario
- - Contraseña
+ - Nombre completo del doctor /HECHO
+ - Cédula profesional /HECHO
+ - Foto (Mapa de bits) /HECHO
+ - Clave de usuario /HECHO
+ - Contraseña /HECHO
 
  CITAS [Se deben poder agendar citas]
 
  - Fecha y hora
-	> Debe tener un formato libre
+	> Debe tener un formato libre /HECHO
 	> Evitar la creación con una fecha pasada
 	> Evitar la modificación de citas pasadas
 
- - Nombre del cliente (Dueño de la mascota)
+ - Nombre del cliente (Dueño de la mascota) /HECHO
 
- - Teléfono de contacto.
-	> Solo números y tener exactamente 8, 10 o 12 caracteres.
+ - Teléfono de contacto. /HECHO
+	> Solo números y tener exactamente 8, 10 o 12 caracteres. /HECHO
 
  - Especie de la mascota (perro, gato, lombriz...)
 	> Se debe seleccionar a través de un ComboBox
 
- - Nombre de la mascota
-	> Solo letras
+ - Nombre de la mascota /HECHO
+	> Solo letras /HECHO
 
- - Motivo de la consulta
-	> Debe ser abierto
+ - Motivo de la consulta /HECHO
+	> Debe ser abierto /HECHO
 
- - Costo de la consulta
-	> Solo números y un sólo punto
+ - Costo de la consulta /FALTA PROBAR
+	> Solo números y un sólo punto /HECHO
 
  - Estatus (Pendiente, Efectuada, Cancelada, etc.)
 	> Las citas pueden cancelarse o eliminarse antes de que sucedan
@@ -47,7 +47,7 @@
 		> Eliminada: Se libera la memoria y ya no se puede visualizar
 
  AGENDA [Visualizador principal de la app]
- - Estará en la ventana principal
+ - Estará en la ventana principal /HECHO
  - Visualizar las citas ordenadas de la más próxima a la más lejana
  - Mostrar las citas de hoy en adelante (No mostrar las citas pasadas)
  - Visualizar, modificar y eliminar cada cita (o redirigir a una sección para realizar estas acciones)
@@ -55,7 +55,7 @@
  - Se debe agregar una pantalla para consultar citas en un rango de fechas
 
  ABC [Altas/Bajas/Cambios]
- - Las citas deben darse de alta, de baja o cambiarse en cualquier momento
+ - Las citas deben darse de alta, de baja o cambiarse en cualquier momento 
 	> El proyecto debe tener las pantallas necesarias para realizar dichos cambios
 	> Todas estas operaciones deben ser realizadas sobre listas doblemente ligadas
  - Las bajas deben eliminar los nodos de la lista ligada

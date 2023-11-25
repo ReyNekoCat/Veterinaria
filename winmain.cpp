@@ -1,12 +1,13 @@
 #include <Windows.h>
 #include <iostream>
-#include <oleauto.h> // Librería para administrar fechas
+#include <oleauto.h> // LibrerÃ­a para administrar fechas
 #include <commctrl.h>
 #include <windowsx.h>
 #include <fstream> 
+#include <string>
 #include "resource.h"
 using namespace std;
-// Declaración de estructuras
+// DeclaraciÃ³n de estructuras
 struct VETERINARIO {
 	char Nombre[100];
 	int Cedula;
@@ -49,7 +50,7 @@ struct CITAS {
 HINSTANCE hInst;  // Instancia actual
 int ActiveVet = 000; // Veterinario actual (Bruh)
 
-// Declaración de funciones
+// DeclaraciÃ³n de funciones
 LRESULT CALLBACK LoginCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK AgendaCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK CitasCallback(HWND, UINT, WPARAM, LPARAM);
@@ -64,10 +65,12 @@ void agregarVetFinal(VETERINARIO*);
 NODOVET* buscarPorClave(int);
 CITA* crearCita(HWND, int);
 void modCita(HWND, int);
+void deleteCita(HWND, int);
 NODOCITA* nuevoNodoCita(CITA*);
 void agregarCita(CITA*);
-NODOCITA* buscarCitaPorDia(int claveVet, SYSTEMTIME* dia);
-NODOCITA* buscarCitaPorFecha(int claveVet, int fecha);
+NODOCITA* buscarCitaPorDia(int, double);
+NODOCITA* buscarCitaPorFecha(int, double);
+CITAS* crearTempListaCitaPorDia(int, double);
 
 bool CargarVETBIN(VETERINARIOS& listaVeterinarios) { 
 	ifstream archivo("Info de veterinarios.bin", ios::binary);
@@ -101,10 +104,10 @@ bool ValidarNumeros(const char*, int, const char*, int, int);
 bool ValidarTelefono(const char*, int);
 bool ValidarPrecio(const char*, int);
 
-// Función principal/Callbacks/Menu
+// FunciÃ³n principal/Callbacks/Menu
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 
-	//Inicialización
+	//InicializaciÃ³n
 	HWND hWindow = CreateDialog(hInst, MAKEINTRESOURCE(DLG_LOGIN), NULL, LoginCallback);
 	MSG Msg;
 	ZeroMemory(&Msg, sizeof(Msg));
@@ -150,13 +153,13 @@ LRESULT CALLBACK LoginCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 							ShowWindow(window, SW_SHOW);
 							EndDialog(hwnd, 0);
 						}else
-							MessageBox(hwnd, "Contraseña inválida", "Vuelva a intentarlo", MB_OK);						
+							MessageBox(hwnd, "ContraseÃ±a invÃ¡lida", "Vuelva a intentarlo", MB_OK);						
 					}else
-						MessageBox(hwnd, "Ingrese un usuario válido", "No se encontró el usuario", MB_OK);
+						MessageBox(hwnd, "Ingrese un usuario vÃ¡lido", "No se encontrÃ³ el usuario", MB_OK);
 				}break;
 				case WM_CLOSE:
 				case WM_DESTROY: {
-					int result = MessageBox(hwnd, "¿Desea cerrar el programa?", "Advertencia", 1);
+					int result = MessageBox(hwnd, "Â¿Desea cerrar el programa?", "Advertencia", 1);
 					if (result != 1)
 						break;
 					PostQuitMessage(0);
@@ -190,14 +193,8 @@ LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 				LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE); 
 		if (imagen != NULL) 
 			SendMessage(GetDlgItem(hwnd, PC_AGENDA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen); 
-
-
-
 	}
 		case WM_COMMAND: {
-
-		
-
 			int ID = LOWORD(wParam);
 			if (Menu(ID, hwnd)) {
 				return FALSE;
@@ -219,7 +216,7 @@ LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 	}
 	return FALSE;
 }
-LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK CitasCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 	switch (msg) {
 	case WM_INITDIALOG: { 
@@ -239,7 +236,7 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 				75, 75,
 				LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE); 
 		if (imagen != NULL) 
-			SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);  
+			SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
 	}
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
@@ -249,7 +246,7 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		switch (ID) {
 			// Casos de Citas
 			case BTN_CREAR: {
-				//Validar Nombre del dueño
+				//Validar Nombre del dueÃ±o
 				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE); 
 				int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE); 
 				char wVET_NOMBRE[100];  
@@ -281,10 +278,9 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 					agregarCita(crearCita(hwnd, ActiveVet));
 					MessageBox(NULL, "La cita ha sido agregada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION); 
 				}
-
 			}break;
 			case BTN_MODIFICAR: {
-				//Validar Nombre del dueño
+				//Validar Nombre del dueÃ±o
 				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE);
 				int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
 				char wVET_NOMBRE[100];
@@ -317,9 +313,182 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 					modCita(hwnd, ActiveVet);
 					MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);				
 				}
-
 			}break;
+			case BTN_ELIMINAR: {
+				//Validar Nombre del dueÃ±o
+				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE);
+				int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
+				char wVET_NOMBRE[100];
+				GetDlgItemText(hwnd, EDIT_NOMBRE, wVET_NOMBRE, 100);
+				GetWindowText(hVET_NOMBRE, wVET_NOMBRE, Length_NOMBRE + 1);
+				//Validad nombre de la mascota
+				HWND hCITA_MASCOTA = GetDlgItem(hwnd, EDIT_MASCOTA);
+				int Length_MASCOTA = GetWindowTextLength(hCITA_MASCOTA);
+				char wCITA_MASCOTA[100];
+				GetDlgItemText(hwnd, EDIT_MASCOTA, wCITA_MASCOTA, 100);
+				GetWindowText(hCITA_MASCOTA, wCITA_MASCOTA, Length_MASCOTA + 1);
+				//Validar numero telefonico 
+				HWND hTEL = GetDlgItem(hwnd, EDIT_TEL);
+				int LengthTEL = GetWindowTextLength(hTEL);
+				char wTEL[20];
+				GetDlgItemText(hwnd, EDIT_TEL, wTEL, 20);
+				GetWindowText(hTEL, wTEL, LengthTEL + 1);
+				//Validar precio
+				HWND hPRECIO = GetDlgItem(hwnd, EDIT_PRECIO);
+				int LengthPRECIO = GetWindowTextLength(hPRECIO);
+				char wPRECIO[1000];
+				GetDlgItemText(hwnd, EDIT_PRECIO, wPRECIO, 1000);
+				GetWindowText(hPRECIO, wPRECIO, LengthPRECIO + 1);
 
+				if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE) || !ValidarLetras(wCITA_MASCOTA, Length_MASCOTA) || !ValidarTelefono(wTEL, LengthTEL) || !ValidarPrecio(wPRECIO, LengthPRECIO)) {
+					break;
+				}
+				else {
+					// Guardado de datos modificados
+					deleteCita(hwnd, ActiveVet);
+					MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
+				}
+			}break;
+		}
+	}break;
+	}
+	return FALSE;
+}
+LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+
+	switch (msg) {
+	case WM_INITDIALOG: {
+		NODOVET* busqueda = buscarPorClave(ActiveVet);
+		SetDlgItemText(hwnd, EDIT_VET_CITA, busqueda->Dato->Nombre);
+		SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta);
+
+		//Abrir imagen desde la ruta guardada
+		OPENFILENAME ofn;
+		ZeroMemory(&ofn, sizeof(ofn));
+		SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta);
+		HBITMAP imagen =
+			(HBITMAP)LoadImage(
+				hInst,
+				busqueda->Dato->FotoRuta,
+				IMAGE_BITMAP,
+				75, 75,
+				LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE);
+		if (imagen != NULL)
+			SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
+
+		//horas de citas
+		HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
+		HWND hCBhora = GetDlgItem(hwnd, CB_MODIFICAR_HORA);
+		SYSTEMTIME SysDia = { 0 }; double VarDia;
+		DateTime_GetSystemtime(hDTPdia, &SysDia);
+		SystemTimeToVariantTime(&SysDia, &VarDia);
+		CITAS* TempLista = crearTempListaCitaPorDia(ActiveVet, VarDia);
+		if (TempLista->Origen != NULL) {
+			NODOCITA* TempCita = TempLista->Origen;
+			while (TempCita != NULL) {
+				ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->NombreCliente);
+				TempCita = TempCita->Siguiente;
+			}
+		}
+	}
+	case WM_COMMAND: {
+		int ID = LOWORD(wParam);
+		if (Menu(ID, hwnd))
+			return FALSE;
+
+		switch (ID) {
+			// Casos de Citas
+		case DTP_MODIFICAR_FECHA: {
+			HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
+			HWND hCBhora = GetDlgItem(hwnd, CB_MODIFICAR_HORA);
+			SYSTEMTIME SysDia = { 0 }; double VarDia;
+			DateTime_GetSystemtime(hDTPdia, &SysDia);
+			SystemTimeToVariantTime(&SysDia, &VarDia);
+			CITAS* TempLista = crearTempListaCitaPorDia(ActiveVet, VarDia);
+			if (TempLista->Origen != NULL) {
+				NODOCITA* TempCita = TempLista->Origen;
+				while (TempCita != NULL) {
+					ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->NombreCliente);
+					TempCita = TempCita->Siguiente;
+				}
+			}
+		}
+		case CB_MODIFICAR_HORA: {
+		case CB_GETDROPPEDSTATE: {
+
+
+		}break;
+		}break;
+		case BTN_MODIFICAR: {
+			//Validar Nombre del dueÃ±o
+			HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE);
+			int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
+			char wVET_NOMBRE[100];
+			GetDlgItemText(hwnd, EDIT_NOMBRE, wVET_NOMBRE, 100);
+			GetWindowText(hVET_NOMBRE, wVET_NOMBRE, Length_NOMBRE + 1);
+			//Validad nombre de la mascota
+			HWND hCITA_MASCOTA = GetDlgItem(hwnd, EDIT_MASCOTA);
+			int Length_MASCOTA = GetWindowTextLength(hCITA_MASCOTA);
+			char wCITA_MASCOTA[100];
+			GetDlgItemText(hwnd, EDIT_MASCOTA, wCITA_MASCOTA, 100);
+			GetWindowText(hCITA_MASCOTA, wCITA_MASCOTA, Length_MASCOTA + 1);
+			//Validar numero telefonico 
+			HWND hTEL = GetDlgItem(hwnd, EDIT_TEL);
+			int LengthTEL = GetWindowTextLength(hTEL);
+			char wTEL[20];
+			GetDlgItemText(hwnd, EDIT_TEL, wTEL, 20);
+			GetWindowText(hTEL, wTEL, LengthTEL + 1);
+			//Validar precio
+			HWND hPRECIO = GetDlgItem(hwnd, EDIT_PRECIO);
+			int LengthPRECIO = GetWindowTextLength(hPRECIO);
+			char wPRECIO[1000];
+			GetDlgItemText(hwnd, EDIT_PRECIO, wPRECIO, 1000);
+			GetWindowText(hPRECIO, wPRECIO, LengthPRECIO + 1);
+
+			if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE) || !ValidarLetras(wCITA_MASCOTA, Length_MASCOTA) || !ValidarTelefono(wTEL, LengthTEL) || !ValidarPrecio(wPRECIO, LengthPRECIO)) {
+				break;
+			}
+			else {
+				// Guardado de datos modificados
+				modCita(hwnd, ActiveVet);
+				MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
+			}
+		}break;
+		case BTN_ELIMINAR: {
+			//Validar Nombre del dueÃ±o
+			HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE);
+			int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
+			char wVET_NOMBRE[100];
+			GetDlgItemText(hwnd, EDIT_NOMBRE, wVET_NOMBRE, 100);
+			GetWindowText(hVET_NOMBRE, wVET_NOMBRE, Length_NOMBRE + 1);
+			//Validad nombre de la mascota
+			HWND hCITA_MASCOTA = GetDlgItem(hwnd, EDIT_MASCOTA);
+			int Length_MASCOTA = GetWindowTextLength(hCITA_MASCOTA);
+			char wCITA_MASCOTA[100];
+			GetDlgItemText(hwnd, EDIT_MASCOTA, wCITA_MASCOTA, 100);
+			GetWindowText(hCITA_MASCOTA, wCITA_MASCOTA, Length_MASCOTA + 1);
+			//Validar numero telefonico 
+			HWND hTEL = GetDlgItem(hwnd, EDIT_TEL);
+			int LengthTEL = GetWindowTextLength(hTEL);
+			char wTEL[20];
+			GetDlgItemText(hwnd, EDIT_TEL, wTEL, 20);
+			GetWindowText(hTEL, wTEL, LengthTEL + 1);
+			//Validar precio
+			HWND hPRECIO = GetDlgItem(hwnd, EDIT_PRECIO);
+			int LengthPRECIO = GetWindowTextLength(hPRECIO);
+			char wPRECIO[1000];
+			GetDlgItemText(hwnd, EDIT_PRECIO, wPRECIO, 1000);
+			GetWindowText(hPRECIO, wPRECIO, LengthPRECIO + 1);
+
+			if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE) || !ValidarLetras(wCITA_MASCOTA, Length_MASCOTA) || !ValidarTelefono(wTEL, LengthTEL) || !ValidarPrecio(wPRECIO, LengthPRECIO)) {
+				break;
+			}
+			else {
+				// Guardado de datos modificados
+				deleteCita(hwnd, ActiveVet);
+				MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
+			}
+		}break;
 		}
 	}break;
 	}
@@ -408,9 +577,9 @@ LRESULT CALLBACK PerfilModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 				char wCLAVE[20];
 				GetDlgItemText(hwnd, EDIT_CLAVE, wCLAVE, 20);
 				GetWindowText(hCLAVE, wCLAVE, LengthCLAVE + 1);
-				//validacion de contraseña
-				HWND hCONTRASEÑA = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD);
-				int LengthPASS = GetWindowTextLength(hCONTRASEÑA);
+				//validacion de contraseÃ±a
+				HWND hCONTRASEÃ‘A = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD);
+				int LengthPASS = GetWindowTextLength(hCONTRASEÃ‘A);
 				if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE)) {
 					break;
 				}
@@ -424,14 +593,14 @@ LRESULT CALLBACK PerfilModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 					GetDlgItemText(hwnd, EDIT_DIRECCION, wRUTA, 200);
 					GetWindowText(hRUTA, wRUTA, GetWindowTextLength(hRUTA)+1);
 					GetDlgItemText(hwnd, EDIT_PERFIL_PASSWORD_CREAR, wPASSWORD, 20);
-					GetWindowText(hCONTRASEÑA, wPASSWORD, GetWindowTextLength(hCONTRASEÑA) + 1);
+					GetWindowText(hCONTRASEÃ‘A, wPASSWORD, GetWindowTextLength(hCONTRASEÃ‘A) + 1);
 					modVet(wVET_NOMBRE, GetDlgItemInt(hwnd, EDIT_CEDULA, NULL, NULL), GetDlgItemInt(hwnd, EDIT_CLAVE, NULL, NULL), wRUTA, wPASSWORD);
 					MessageBox(NULL, "Tus datos han sido modificados correctamente", "Bienvenido!!!", MB_OK | MB_ICONINFORMATION);
 				}
 			}break;
 			case WM_CLOSE: 
 			case WM_DESTROY: { 
-				int result = MessageBox(hwnd, "¿Desea cerrar el programa?", "Advertencia", 1); 
+				int result = MessageBox(hwnd, "Â¿Desea cerrar el programa?", "Advertencia", 1); 
 				if (result != 1)
 					break;
 				PostQuitMessage(0); 
@@ -502,9 +671,9 @@ LRESULT CALLBACK PerfilCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 			char wCLAVE[20];
 			GetDlgItemText(hwnd, EDIT_CLAVE, wCLAVE, 20);
 			GetWindowText(hCLAVE, wCLAVE, LengthCLAVE + 1);
-			//validacion de contraseña
-			HWND hCONTRASEÑA = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD_CREAR);
-			int LengthPASS = GetWindowTextLength(hCONTRASEÑA);
+			//validacion de contraseÃ±a
+			HWND hCONTRASEÃ‘A = GetDlgItem(hwnd, EDIT_PERFIL_PASSWORD_CREAR);
+			int LengthPASS = GetWindowTextLength(hCONTRASEÃ‘A);
 			if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE)) {
 				break;
 			}
@@ -518,14 +687,14 @@ LRESULT CALLBACK PerfilCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 				GetDlgItemText(hwnd, EDIT_DIRECCION_CREAR, wRUTA, 200);
 				GetWindowText(hRUTA, wRUTA, GetWindowTextLength(hRUTA) + 1);
 				GetDlgItemText(hwnd, EDIT_PERFIL_PASSWORD_CREAR, wPASSWORD, 20);
-				GetWindowText(hCONTRASEÑA, wPASSWORD, GetWindowTextLength(hCONTRASEÑA) + 1);
+				GetWindowText(hCONTRASEÃ‘A, wPASSWORD, GetWindowTextLength(hCONTRASEÃ‘A) + 1);
 				agregarVetFinal(crearVet(wVET_NOMBRE, GetDlgItemInt(hwnd, EDIT_CEDULA_CREAR, NULL, NULL), GetDlgItemInt(hwnd, EDIT_CLAVE_CREAR, NULL, NULL), wRUTA, wPASSWORD));
 				MessageBox(NULL, "Los datos del nuevo veterinario se han guardado", "Perfil creado con exito!!!", MB_OK | MB_ICONINFORMATION);		
 			}
 		}break;
 		case WM_CLOSE:
 		case WM_DESTROY: {
-			int result = MessageBox(hwnd, "¿Desea cerrar el programa?", "Advertencia", 1);
+			int result = MessageBox(hwnd, "Â¿Desea cerrar el programa?", "Advertencia", 1);
 			if (result != 1)
 				break;
 			PostQuitMessage(0);
@@ -549,17 +718,17 @@ BOOL Menu(INT opcion, HWND window0) {
 		}break;
 		case MENU_CITAS_NUEVA: {
 			DestroyWindow(window0);
-			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_NUEVA), NULL, CitasCallback);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_NUEVA), NULL, CitasCrearCallback);
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_CITAS_MODIFICAR: {
 			DestroyWindow(window0);
-			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_MODIFICAR), NULL, CitasCallback);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_MODIFICAR), NULL, CitasModCallback);
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_CITAS_ELIMINAR: {
 			DestroyWindow(window0);
-			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_ELIMINAR), NULL, CitasCallback);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_ELIMINAR), NULL, CitasModCallback);
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_PERFIL_MODIFICAR: {
@@ -574,7 +743,7 @@ BOOL Menu(INT opcion, HWND window0) {
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case ID_SALIR_LOGOUT: {
-			int result = MessageBox(window0, "¿Desea cerrar sesión?", "Advertencia", 1);
+			int result = MessageBox(window0, "Â¿Desea cerrar sesiÃ³n?", "Advertencia", 1);
 			if (result != 1)
 				break;
 			DestroyWindow(window0);
@@ -583,7 +752,7 @@ BOOL Menu(INT opcion, HWND window0) {
 		}break;
 		case ID_SALIR_EXIT: {
 			GuardarVETBIN();
-			int result = MessageBox(window0, "¿Desea cerrar el programa?", "Advertencia", 1);
+			int result = MessageBox(window0, "Â¿Desea cerrar el programa?", "Advertencia", 1);
 			if (result != 1)
 				break;
 			PostQuitMessage(0);
@@ -592,7 +761,7 @@ BOOL Menu(INT opcion, HWND window0) {
 	}return TRUE;
 }
 
-// Funciones de creación/busqueda/modificación
+// Funciones de creaciÃ³n/busqueda/modificaciÃ³n
 VETERINARIO* crearVet(char* nombre, int cedula, int clave, char* fotoRuta, char* password) {
 	VETERINARIO* nuevo = new VETERINARIO;
 	strcpy_s(nuevo->Nombre, 100, nombre);
@@ -666,13 +835,13 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	SYSTEMTIME diaCitas = { 0 };
 	SYSTEMTIME horaCitas = { 0 };
 
-	GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName));
-	GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota));
-	GetDlgItemText(hwnd, EDIT_MOTIVO, Motivo, GetWindowTextLength(hMotivo));
-	GetDlgItemText(hwnd, EDIT_PRECIO, Precio, GetWindowTextLength(hPrecio));
-	GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
-	ComboBox_GetText(hEspecie, Especie, GetWindowTextLength(hEspecie));
-	ComboBox_GetText(hEspecie, Estatus, GetWindowTextLength(hStatus));
+	GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName)+1);
+	GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota)+1);
+	GetDlgItemText(hwnd, EDIT_MOTIVO, Motivo, GetWindowTextLength(hMotivo)+1);
+	GetDlgItemText(hwnd, EDIT_PRECIO, Precio, GetWindowTextLength(hPrecio)+1);
+	
+	ComboBox_GetText(hEspecie, Especie, GetWindowTextLength(hEspecie)+1);
+	ComboBox_GetText(hEspecie, Estatus, GetWindowTextLength(hStatus)+1);
 	DateTime_GetSystemtime(hDia, &diaCitas);
 	DateTime_GetSystemtime(hHora, &horaCitas); // Aqui
 	SystemTimeToVariantTime(&diaCitas, &dia);
@@ -686,7 +855,7 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	nuevo->Hora = &horaCitas;
 	nuevo->Fecha = fecha;
 	strcpy_s(nuevo->NombreCliente, 100, Nombre);	
-	nuevo->Telefono = Telefono;
+	nuevo->Telefono = GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
 	strcpy_s(nuevo->Especie, 20, Especie);
 	strcpy_s(nuevo->NombreMascota, 30, NombreMascota);
 	strcpy_s(nuevo->Motivo, 500, Motivo);
@@ -737,6 +906,46 @@ void modCita(HWND hwnd, int claveVet) {
 	strcpy_s(original->Dato->Estatus, 20, Estatus);
 	original->Dato->Costo = atof(Precio); //Probar
 }
+void deleteCita(HWND hwnd, int claveVet) {
+	HWND hDia = GetDlgItem(hwnd, DTP_CREAR_FECHA);
+	HWND hHora = GetDlgItem(hwnd, DTP_CREAR_HORA);
+	double hora = 0, dia = 0, fecha = 0;
+	SYSTEMTIME diaCitas = { 0 };
+	SYSTEMTIME horaCitas = { 0 };
+	DateTime_GetSystemtime(hDia, &diaCitas);
+	DateTime_GetSystemtime(hHora, &horaCitas);
+	SystemTimeToVariantTime(&diaCitas, &dia);
+	SystemTimeToVariantTime(&horaCitas, &hora);
+	fecha = ((int)dia) + (hora - ((int)hora));
+
+	NODOCITA* nodo = buscarCitaPorFecha(claveVet, fecha);
+
+	// ExtracciÃ³n de la lista
+	if (nodo == LISTACITA.Origen || nodo == LISTACITA.Fin) {
+		LISTACITA.Origen = NULL;
+		LISTACITA.Fin = NULL;
+		delete(nodo);
+	}
+	else if (nodo == LISTACITA.Origen) {
+		LISTACITA.Origen = nodo->Siguiente;
+		LISTACITA.Origen->Anterior = NULL;
+		nodo->Siguiente = NULL;
+		delete(nodo);
+	}
+	else if (nodo == LISTACITA.Fin) {
+		LISTACITA.Fin = nodo->Anterior;
+		LISTACITA.Fin->Siguiente = NULL;
+		nodo->Anterior = NULL;
+		delete(nodo);
+	}
+	else {
+		nodo->Anterior->Siguiente = nodo->Siguiente;
+		nodo->Siguiente->Anterior = nodo->Anterior;
+		nodo->Anterior = NULL;
+		nodo->Siguiente = NULL;
+		delete(nodo);
+	}	
+}
 NODOCITA* nuevoNodoCita(CITA* dato) {
 	NODOCITA* nodo = new NODOCITA;
 	nodo->Dato = dato;
@@ -772,26 +981,26 @@ void agregarCita(CITA* dato) {
 			temp = temp->Siguiente;
 		}
 		nodo->Anterior = temp;
-		nodo->Siguiente = temp->Siguiente; // Dereferencing NULL??
+		nodo->Siguiente = temp->Siguiente; // Dereferencing NULL?? / temp was nullptr
 		temp->Siguiente->Anterior = nodo;
 		temp->Siguiente = nodo;
 	}
 }
-NODOCITA* buscarCitaPorDia(int claveVet, SYSTEMTIME* dia) {
+NODOCITA* buscarCitaPorDia(int claveVet, double dia) {
 	if (LISTACITA.Origen == NULL)
 		return NULL;
 	NODOCITA* indice = LISTACITA.Origen;
 
 	while (indice != NULL) {
-		if (indice->Dato->Dia == dia) {
+		if ((int)indice->Dato->Fecha == (int)dia) {
 			return indice;
+			break;
 		}
 		indice = indice->Siguiente;
 	}
 	return NULL;
-	
 }
-NODOCITA* buscarCitaPorFecha(int claveVet, int fecha){
+NODOCITA* buscarCitaPorFecha(int claveVet, double fecha){
 	if (LISTACITA.Origen == NULL)
 		return NULL;
 	NODOCITA* indice = LISTACITA.Origen;
@@ -799,13 +1008,41 @@ NODOCITA* buscarCitaPorFecha(int claveVet, int fecha){
 	while (indice != NULL) {
 		if (indice->Dato->Fecha == fecha) {
 			return indice;
+			break;
 		}
 		indice = indice->Siguiente;
 	}
 	return NULL;
 }
+CITAS* crearTempListaCitaPorDia(int claveVet, double dia) {	
+	if (LISTACITA.Origen == NULL)
+		return NULL;
 
-// Funciones de validación
+	NODOCITA* indice = LISTACITA.Origen;
+	CITAS* temp = new CITAS;
+	temp->Origen = NULL;
+	temp->Fin = NULL;
+	while (indice != NULL) {
+		if ((int)indice->Dato->Fecha == (int)dia) {
+			if (temp->Origen == NULL) {
+				temp->Origen = indice;
+				temp->Fin = indice;
+				temp->Origen->Anterior = NULL;
+				temp->Fin->Siguiente = NULL;
+			}
+			else {
+				temp->Fin->Siguiente = indice;
+				indice->Anterior = temp->Fin;
+				indice->Siguiente = NULL;
+				temp->Fin = indice;
+			}
+		}
+		indice = indice->Siguiente;
+	}
+	return temp;
+}
+
+// Funciones de validaciÃ³n
 bool ValidarLetras(const char* Letra, int Vacio) {
 	if (Vacio < 1) {
 		MessageBox(NULL, "No se admiten espacios en blanco", "Info", MB_OK | MB_ICONERROR);
@@ -814,7 +1051,7 @@ bool ValidarLetras(const char* Letra, int Vacio) {
 	else {
 		for (int i = 0; Letra[i] != '\0'; ++i) {
 			if (!isalpha(Letra[i]) && !isspace(Letra[i])) {
-				// Si encuentra un carácter no válido, muestra un mensaje de error y devuelve false
+				// Si encuentra un carÃ¡cter no vÃ¡lido, muestra un mensaje de error y devuelve false
 				MessageBox(NULL, "Ingresa datos validos", "Error", MB_OK | MB_ICONERROR);
 				return false;
 			}
@@ -871,7 +1108,7 @@ bool ValidarPrecio(const char* cPRECIO, int PRECIO) {
 	int Contador = 0;
 	for (int i = 0; cPRECIO[i] != '\0'; ++i) {
 		if (!isdigit(cPRECIO[i])&&cPRECIO[i]!=46) {
-			MessageBox(NULL, "No se aceptan valores negativos o caracteres extraños", "Info", MB_OK | MB_ICONERROR);
+			MessageBox(NULL, "No se aceptan valores negativos o caracteres extraÃ±os", "Info", MB_OK | MB_ICONERROR);
 			return false;
 		}
 		if(!isdigit(cPRECIO[i])) { 
@@ -899,7 +1136,7 @@ void GuardarVETBIN() {
 	NODOVET* actual = LISTAVET.Origen;
 	while (actual != NULL) {
 		if (archivo.bad()) {
-			MessageBox(NULL, "Ocurrió un error durante la escritura", "Error", MB_OK | MB_ICONERROR);
+			MessageBox(NULL, "OcurriÃ³ un error durante la escritura", "Error", MB_OK | MB_ICONERROR);
 			return;
 		}
 
