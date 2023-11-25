@@ -63,6 +63,7 @@ void agregarVetFinal(VETERINARIO*);
 NODOVET* buscarPorClave(int);
 CITA* crearCita(HWND, int);
 void modCita(HWND, int);
+void deleteCita(HWND, int);
 NODOCITA* nuevoNodoCita(CITA*);
 void agregarCita(CITA*);
 NODOCITA* buscarCitaPorDia(int claveVet, SYSTEMTIME* dia);
@@ -247,7 +248,6 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 					agregarCita(crearCita(hwnd, ActiveVet));
 					MessageBox(NULL, "La cita ha sido agregada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION); 
 				}
-
 			}break;
 			case BTN_MODIFICAR: {
 				//Validar Nombre del dueño
@@ -283,9 +283,42 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 					modCita(hwnd, ActiveVet);
 					MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);				
 				}
-
 			}break;
+			case BTN_ELIMINAR: {
+				//Validar Nombre del dueño
+				HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE);
+				int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
+				char wVET_NOMBRE[100];
+				GetDlgItemText(hwnd, EDIT_NOMBRE, wVET_NOMBRE, 100);
+				GetWindowText(hVET_NOMBRE, wVET_NOMBRE, Length_NOMBRE + 1);
+				//Validad nombre de la mascota
+				HWND hCITA_MASCOTA = GetDlgItem(hwnd, EDIT_MASCOTA);
+				int Length_MASCOTA = GetWindowTextLength(hCITA_MASCOTA);
+				char wCITA_MASCOTA[100];
+				GetDlgItemText(hwnd, EDIT_MASCOTA, wCITA_MASCOTA, 100);
+				GetWindowText(hCITA_MASCOTA, wCITA_MASCOTA, Length_MASCOTA + 1);
+				//Validar numero telefonico 
+				HWND hTEL = GetDlgItem(hwnd, EDIT_TEL);
+				int LengthTEL = GetWindowTextLength(hTEL);
+				char wTEL[20];
+				GetDlgItemText(hwnd, EDIT_TEL, wTEL, 20);
+				GetWindowText(hTEL, wTEL, LengthTEL + 1);
+				//Validar precio
+				HWND hPRECIO = GetDlgItem(hwnd, EDIT_PRECIO);
+				int LengthPRECIO = GetWindowTextLength(hPRECIO);
+				char wPRECIO[1000];
+				GetDlgItemText(hwnd, EDIT_PRECIO, wPRECIO, 1000);
+				GetWindowText(hPRECIO, wPRECIO, LengthPRECIO + 1);
 
+				if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE) || !ValidarLetras(wCITA_MASCOTA, Length_MASCOTA) || !ValidarTelefono(wTEL, LengthTEL) || !ValidarPrecio(wPRECIO, LengthPRECIO)) {
+					break;
+				}
+				else {
+					// Guardado de datos modificados
+					deleteCita(hwnd, ActiveVet);
+					MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
+				}
+			}break;
 		}
 	}break;
 	}
@@ -701,6 +734,46 @@ void modCita(HWND hwnd, int claveVet) {
 	strcpy_s(original->Dato->Motivo, 500, Motivo);
 	strcpy_s(original->Dato->Estatus, 20, Estatus);
 	original->Dato->Costo = atof(Precio); //Probar
+}
+void deleteCita(HWND hwnd, int claveVet) {
+	HWND hDia = GetDlgItem(hwnd, DTP_CREAR_FECHA);
+	HWND hHora = GetDlgItem(hwnd, DTP_CREAR_HORA);
+	double hora = 0, dia = 0, fecha = 0;
+	SYSTEMTIME diaCitas = { 0 };
+	SYSTEMTIME horaCitas = { 0 };
+	DateTime_GetSystemtime(hDia, &diaCitas);
+	DateTime_GetSystemtime(hHora, &horaCitas);
+	SystemTimeToVariantTime(&diaCitas, &dia);
+	SystemTimeToVariantTime(&horaCitas, &hora);
+	fecha = ((int)dia) + (hora - ((int)hora));
+
+	NODOCITA* nodo = buscarCitaPorFecha(claveVet, fecha);
+
+	// Extracción de la lista
+	if (nodo == LISTACITA.Origen || nodo == LISTACITA.Fin) {
+		LISTACITA.Origen = NULL;
+		LISTACITA.Fin = NULL;
+		delete(nodo);
+	}
+	else if (nodo == LISTACITA.Origen) {
+		LISTACITA.Origen = nodo->Siguiente;
+		LISTACITA.Origen->Anterior = NULL;
+		nodo->Siguiente = NULL;
+		delete(nodo);
+	}
+	else if (nodo == LISTACITA.Fin) {
+		LISTACITA.Fin = nodo->Anterior;
+		LISTACITA.Fin->Siguiente = NULL;
+		nodo->Anterior = NULL;
+		delete(nodo);
+	}
+	else {
+		nodo->Anterior->Siguiente = nodo->Siguiente;
+		nodo->Siguiente->Anterior = nodo->Anterior;
+		nodo->Anterior = NULL;
+		nodo->Siguiente = NULL;
+		delete(nodo);
+	}	
 }
 NODOCITA* nuevoNodoCita(CITA* dato) {
 	NODOCITA* nodo = new NODOCITA;
