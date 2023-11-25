@@ -384,13 +384,16 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 		DateTime_GetSystemtime(hDTPdia, &SysDia);
 		SystemTimeToVariantTime(&SysDia, &VarDia);
 		CITAS* TempLista = crearTempListaCitaPorDia(ActiveVet, VarDia);
-		if (TempLista->Origen != NULL) {
-			NODOCITA* TempCita = TempLista->Origen;
-			while (TempCita != NULL) {
-				ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->NombreCliente);
-				TempCita = TempCita->Siguiente;
+		if (TempLista != nullptr){
+			if (TempLista->Origen != NULL) {
+				NODOCITA* TempCita = TempLista->Origen;
+				while (TempCita != NULL) {
+					ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->NombreCliente);
+					TempCita = TempCita->Siguiente;
+				}
 			}
 		}
+		
 	}
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
@@ -922,7 +925,7 @@ void deleteCita(HWND hwnd, int claveVet) {
 	NODOCITA* nodo = buscarCitaPorFecha(claveVet, fecha);
 
 	// Extracción de la lista
-	if (nodo == LISTACITA.Origen || nodo == LISTACITA.Fin) {
+	if (nodo == LISTACITA.Origen && nodo == LISTACITA.Fin) {
 		LISTACITA.Origen = NULL;
 		LISTACITA.Fin = NULL;
 		delete(nodo);
@@ -981,10 +984,12 @@ void agregarCita(CITA* dato) {
 				break;
 			temp = temp->Siguiente;
 		}
-		nodo->Anterior = temp;
-		nodo->Siguiente = temp->Siguiente; // Dereferencing NULL?? / temp was nullptr
-		temp->Siguiente->Anterior = nodo;
-		temp->Siguiente = nodo;
+		if (temp != NULL){
+			nodo->Anterior = temp;
+			nodo->Siguiente = temp->Siguiente; // Dereferencing NULL?? / temp was nullptr
+			temp->Siguiente->Anterior = nodo;
+			temp->Siguiente = nodo;
+		}
 	}
 }
 NODOCITA* buscarCitaPorDia(int claveVet, double dia) {
@@ -1029,17 +1034,17 @@ CITAS* crearTempListaCitaPorDia(int claveVet, double dia) {
 				temp->Origen = indice;
 				temp->Fin = indice;
 				temp->Origen->Anterior = NULL;
-				temp->Fin->Siguiente = NULL;
+
 			}
 			else {
 				temp->Fin->Siguiente = indice;
-				indice->Anterior = temp->Fin;
-				indice->Siguiente = NULL;
+				temp->Fin = indice->Anterior;		
 				temp->Fin = indice;
 			}
 		}
 		indice = indice->Siguiente;
 	}
+	temp->Fin->Siguiente = NULL;
 	return temp;
 }
 
