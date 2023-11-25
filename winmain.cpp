@@ -3,6 +3,7 @@
 #include <oleauto.h> // Librería para administrar fechas
 #include <commctrl.h>
 #include <windowsx.h>
+#include <string>
 #include "resource.h"
 
 // Declaración de estructuras
@@ -66,8 +67,9 @@ void modCita(HWND, int);
 void deleteCita(HWND, int);
 NODOCITA* nuevoNodoCita(CITA*);
 void agregarCita(CITA*);
-NODOCITA* buscarCitaPorDia(int claveVet, SYSTEMTIME* dia);
-NODOCITA* buscarCitaPorFecha(int claveVet, int fecha);
+NODOCITA* buscarCitaPorDia(int, double);
+NODOCITA* buscarCitaPorFecha(int, double);
+CITAS* crearTempListaCitaPorDia(int, double);
 
 bool ValidarLetras(const char*, int);
 bool ValidarNumeros(const char*, int, const char*, int, int);
@@ -157,14 +159,8 @@ LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 				LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE); 
 		if (imagen != NULL) 
 			SendMessage(GetDlgItem(hwnd, PC_AGENDA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen); 
-
-
-
 	}
 		case WM_COMMAND: {
-
-		
-
 			int ID = LOWORD(wParam);
 			if (Menu(ID, hwnd)) {
 				return FALSE;
@@ -186,7 +182,7 @@ LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 	}
 	return FALSE;
 }
-LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK CitasCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 	switch (msg) {
 	case WM_INITDIALOG: { 
@@ -206,7 +202,7 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 				75, 75,
 				LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE); 
 		if (imagen != NULL) 
-			SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);  
+			SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
 	}
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
@@ -319,6 +315,146 @@ LRESULT CALLBACK CitasCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 					MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
 				}
 			}break;
+		}
+	}break;
+	}
+	return FALSE;
+}
+LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+
+	switch (msg) {
+	case WM_INITDIALOG: {
+		NODOVET* busqueda = buscarPorClave(ActiveVet);
+		SetDlgItemText(hwnd, EDIT_VET_CITA, busqueda->Dato->Nombre);
+		SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta);
+
+		//Abrir imagen desde la ruta guardada
+		OPENFILENAME ofn;
+		ZeroMemory(&ofn, sizeof(ofn));
+		SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta);
+		HBITMAP imagen =
+			(HBITMAP)LoadImage(
+				hInst,
+				busqueda->Dato->FotoRuta,
+				IMAGE_BITMAP,
+				75, 75,
+				LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE);
+		if (imagen != NULL)
+			SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
+
+		//horas de citas
+		HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
+		HWND hCBhora = GetDlgItem(hwnd, CB_MODIFICAR_HORA);
+		SYSTEMTIME SysDia = { 0 }; double VarDia;
+		DateTime_GetSystemtime(hDTPdia, &SysDia);
+		SystemTimeToVariantTime(&SysDia, &VarDia);
+		CITAS* TempLista = crearTempListaCitaPorDia(ActiveVet, VarDia);
+		if (TempLista->Origen != NULL) {
+			NODOCITA* TempCita = TempLista->Origen;
+			while (TempCita != NULL) {
+				ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->NombreCliente);
+				TempCita = TempCita->Siguiente;
+			}
+		}
+	}
+	case WM_COMMAND: {
+		int ID = LOWORD(wParam);
+		if (Menu(ID, hwnd))
+			return FALSE;
+
+		switch (ID) {
+			// Casos de Citas
+		case DTP_MODIFICAR_FECHA: {
+			HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
+			HWND hCBhora = GetDlgItem(hwnd, CB_MODIFICAR_HORA);
+			SYSTEMTIME SysDia = { 0 }; double VarDia;
+			DateTime_GetSystemtime(hDTPdia, &SysDia);
+			SystemTimeToVariantTime(&SysDia, &VarDia);
+			CITAS* TempLista = crearTempListaCitaPorDia(ActiveVet, VarDia);
+			if (TempLista->Origen != NULL) {
+				NODOCITA* TempCita = TempLista->Origen;
+				while (TempCita != NULL) {
+					ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->NombreCliente);
+					TempCita = TempCita->Siguiente;
+				}
+			}
+		}
+		case CB_MODIFICAR_HORA: {
+		case CB_GETDROPPEDSTATE: {
+
+
+		}break;
+		}break;
+		case BTN_MODIFICAR: {
+			//Validar Nombre del dueño
+			HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE);
+			int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
+			char wVET_NOMBRE[100];
+			GetDlgItemText(hwnd, EDIT_NOMBRE, wVET_NOMBRE, 100);
+			GetWindowText(hVET_NOMBRE, wVET_NOMBRE, Length_NOMBRE + 1);
+			//Validad nombre de la mascota
+			HWND hCITA_MASCOTA = GetDlgItem(hwnd, EDIT_MASCOTA);
+			int Length_MASCOTA = GetWindowTextLength(hCITA_MASCOTA);
+			char wCITA_MASCOTA[100];
+			GetDlgItemText(hwnd, EDIT_MASCOTA, wCITA_MASCOTA, 100);
+			GetWindowText(hCITA_MASCOTA, wCITA_MASCOTA, Length_MASCOTA + 1);
+			//Validar numero telefonico 
+			HWND hTEL = GetDlgItem(hwnd, EDIT_TEL);
+			int LengthTEL = GetWindowTextLength(hTEL);
+			char wTEL[20];
+			GetDlgItemText(hwnd, EDIT_TEL, wTEL, 20);
+			GetWindowText(hTEL, wTEL, LengthTEL + 1);
+			//Validar precio
+			HWND hPRECIO = GetDlgItem(hwnd, EDIT_PRECIO);
+			int LengthPRECIO = GetWindowTextLength(hPRECIO);
+			char wPRECIO[1000];
+			GetDlgItemText(hwnd, EDIT_PRECIO, wPRECIO, 1000);
+			GetWindowText(hPRECIO, wPRECIO, LengthPRECIO + 1);
+
+			if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE) || !ValidarLetras(wCITA_MASCOTA, Length_MASCOTA) || !ValidarTelefono(wTEL, LengthTEL) || !ValidarPrecio(wPRECIO, LengthPRECIO)) {
+				break;
+			}
+			else {
+				// Guardado de datos modificados
+				modCita(hwnd, ActiveVet);
+				MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
+			}
+		}break;
+		case BTN_ELIMINAR: {
+			//Validar Nombre del dueño
+			HWND hVET_NOMBRE = GetDlgItem(hwnd, EDIT_NOMBRE);
+			int Length_NOMBRE = GetWindowTextLength(hVET_NOMBRE);
+			char wVET_NOMBRE[100];
+			GetDlgItemText(hwnd, EDIT_NOMBRE, wVET_NOMBRE, 100);
+			GetWindowText(hVET_NOMBRE, wVET_NOMBRE, Length_NOMBRE + 1);
+			//Validad nombre de la mascota
+			HWND hCITA_MASCOTA = GetDlgItem(hwnd, EDIT_MASCOTA);
+			int Length_MASCOTA = GetWindowTextLength(hCITA_MASCOTA);
+			char wCITA_MASCOTA[100];
+			GetDlgItemText(hwnd, EDIT_MASCOTA, wCITA_MASCOTA, 100);
+			GetWindowText(hCITA_MASCOTA, wCITA_MASCOTA, Length_MASCOTA + 1);
+			//Validar numero telefonico 
+			HWND hTEL = GetDlgItem(hwnd, EDIT_TEL);
+			int LengthTEL = GetWindowTextLength(hTEL);
+			char wTEL[20];
+			GetDlgItemText(hwnd, EDIT_TEL, wTEL, 20);
+			GetWindowText(hTEL, wTEL, LengthTEL + 1);
+			//Validar precio
+			HWND hPRECIO = GetDlgItem(hwnd, EDIT_PRECIO);
+			int LengthPRECIO = GetWindowTextLength(hPRECIO);
+			char wPRECIO[1000];
+			GetDlgItemText(hwnd, EDIT_PRECIO, wPRECIO, 1000);
+			GetWindowText(hPRECIO, wPRECIO, LengthPRECIO + 1);
+
+			if (!ValidarLetras(wVET_NOMBRE, Length_NOMBRE) || !ValidarLetras(wCITA_MASCOTA, Length_MASCOTA) || !ValidarTelefono(wTEL, LengthTEL) || !ValidarPrecio(wPRECIO, LengthPRECIO)) {
+				break;
+			}
+			else {
+				// Guardado de datos modificados
+				deleteCita(hwnd, ActiveVet);
+				MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
+			}
+		}break;
 		}
 	}break;
 	}
@@ -548,17 +684,17 @@ BOOL Menu(INT opcion, HWND window0) {
 		}break;
 		case MENU_CITAS_NUEVA: {
 			DestroyWindow(window0);
-			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_NUEVA), NULL, CitasCallback);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_NUEVA), NULL, CitasCrearCallback);
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_CITAS_MODIFICAR: {
 			DestroyWindow(window0);
-			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_MODIFICAR), NULL, CitasCallback);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_MODIFICAR), NULL, CitasModCallback);
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_CITAS_ELIMINAR: {
 			DestroyWindow(window0);
-			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_ELIMINAR), NULL, CitasCallback);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_ELIMINAR), NULL, CitasModCallback);
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_PERFIL_MODIFICAR: {
@@ -664,13 +800,13 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	SYSTEMTIME diaCitas = { 0 };
 	SYSTEMTIME horaCitas = { 0 };
 
-	GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName));
-	GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota));
-	GetDlgItemText(hwnd, EDIT_MOTIVO, Motivo, GetWindowTextLength(hMotivo));
-	GetDlgItemText(hwnd, EDIT_PRECIO, Precio, GetWindowTextLength(hPrecio));
-	GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
-	ComboBox_GetText(hEspecie, Especie, GetWindowTextLength(hEspecie));
-	ComboBox_GetText(hEspecie, Estatus, GetWindowTextLength(hStatus));
+	GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName)+1);
+	GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota)+1);
+	GetDlgItemText(hwnd, EDIT_MOTIVO, Motivo, GetWindowTextLength(hMotivo)+1);
+	GetDlgItemText(hwnd, EDIT_PRECIO, Precio, GetWindowTextLength(hPrecio)+1);
+	
+	ComboBox_GetText(hEspecie, Especie, GetWindowTextLength(hEspecie)+1);
+	ComboBox_GetText(hEspecie, Estatus, GetWindowTextLength(hStatus)+1);
 	DateTime_GetSystemtime(hDia, &diaCitas);
 	DateTime_GetSystemtime(hHora, &horaCitas); // Aqui
 	SystemTimeToVariantTime(&diaCitas, &dia);
@@ -684,7 +820,7 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	nuevo->Hora = &horaCitas;
 	nuevo->Fecha = fecha;
 	strcpy_s(nuevo->NombreCliente, 100, Nombre);	
-	nuevo->Telefono = Telefono;
+	nuevo->Telefono = GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
 	strcpy_s(nuevo->Especie, 20, Especie);
 	strcpy_s(nuevo->NombreMascota, 30, NombreMascota);
 	strcpy_s(nuevo->Motivo, 500, Motivo);
@@ -810,26 +946,26 @@ void agregarCita(CITA* dato) {
 			temp = temp->Siguiente;
 		}
 		nodo->Anterior = temp;
-		nodo->Siguiente = temp->Siguiente; // Dereferencing NULL??
+		nodo->Siguiente = temp->Siguiente; // Dereferencing NULL?? / temp was nullptr
 		temp->Siguiente->Anterior = nodo;
 		temp->Siguiente = nodo;
 	}
 }
-NODOCITA* buscarCitaPorDia(int claveVet, SYSTEMTIME* dia) {
+NODOCITA* buscarCitaPorDia(int claveVet, double dia) {
 	if (LISTACITA.Origen == NULL)
 		return NULL;
 	NODOCITA* indice = LISTACITA.Origen;
 
 	while (indice != NULL) {
-		if (indice->Dato->Dia == dia) {
+		if ((int)indice->Dato->Fecha == (int)dia) {
 			return indice;
+			break;
 		}
 		indice = indice->Siguiente;
 	}
 	return NULL;
-	
 }
-NODOCITA* buscarCitaPorFecha(int claveVet, int fecha){
+NODOCITA* buscarCitaPorFecha(int claveVet, double fecha){
 	if (LISTACITA.Origen == NULL)
 		return NULL;
 	NODOCITA* indice = LISTACITA.Origen;
@@ -837,10 +973,38 @@ NODOCITA* buscarCitaPorFecha(int claveVet, int fecha){
 	while (indice != NULL) {
 		if (indice->Dato->Fecha == fecha) {
 			return indice;
+			break;
 		}
 		indice = indice->Siguiente;
 	}
 	return NULL;
+}
+CITAS* crearTempListaCitaPorDia(int claveVet, double dia) {	
+	if (LISTACITA.Origen == NULL)
+		return NULL;
+
+	NODOCITA* indice = LISTACITA.Origen;
+	CITAS* temp = new CITAS;
+	temp->Origen = NULL;
+	temp->Fin = NULL;
+	while (indice != NULL) {
+		if ((int)indice->Dato->Fecha == (int)dia) {
+			if (temp->Origen == NULL) {
+				temp->Origen = indice;
+				temp->Fin = indice;
+				temp->Origen->Anterior = NULL;
+				temp->Fin->Siguiente = NULL;
+			}
+			else {
+				temp->Fin->Siguiente = indice;
+				indice->Anterior = temp->Fin;
+				indice->Siguiente = NULL;
+				temp->Fin = indice;
+			}
+		}
+		indice = indice->Siguiente;
+	}
+	return temp;
 }
 
 // Funciones de validación
