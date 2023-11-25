@@ -5,6 +5,10 @@
 #include <windowsx.h>
 #include <fstream> 
 #include <string>
+#include <atlstr.h>  
+#include <sstream>  
+#include <iomanip> 
+#include <format>  
 #include "resource.h"
 using namespace std;
 
@@ -27,12 +31,9 @@ struct VETERINARIOS {
 }LISTAVET;
 struct CITA {
 	int ClaveVet;
-	//SYSTEMTIME* Dia;
-	//SYSTEMTIME* Hora;
-	double Fecha;
-	char NombreCliente[100];
 	int Telefono;
 	double Fecha;
+	double varHora;
 	char NombreCliente[100];	
 	char Especie[20];
 	char NombreMascota[30];
@@ -72,6 +73,7 @@ NODOVET* nuevoNodoVet(VETERINARIO*);
 void agregarVetFinal(VETERINARIO*);
 NODOVET* buscarPorClave(int);
 CITA* crearCita(HWND, int);
+CITA* crearCitaDirecto(int, int, double, double, char*, char*, char*, char*, char*, float);
 void modCita(HWND, int);
 void deleteCita(HWND, int);
 NODOCITA* nuevoNodoCita(CITA*);
@@ -81,7 +83,8 @@ NODOCITA* buscarCitaPorDia(int, double);
 NODOCITA* buscarCitaPorFecha(int, double);
 void crearTempListaCitaPorDia(int, double);
 void crearTempListaCitaPorFechas(int, double, double);
-void agregarCitaFinal(CITA* dato);
+void agregarCitaFinal(CITA*);
+char* formatoHora(LPSYSTEMTIME, char*);
 
 bool ValidarLetras(const char*, int);
 bool ValidarNumeros(const char*, int, const char*, int, int);
@@ -113,7 +116,7 @@ bool CargarVETBIN(VETERINARIOS& listaVeterinarios) {
 	return (lectura > 0);
 }
 
-bool CargarCITABIN(VETERINARIOS& listadeCitas) {
+bool CargarCITABIN(CITA& listadeCitas) {
 	ifstream archivo("Info de citas.bin", ios::binary);
 	if (!archivo.is_open()) {
 		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
@@ -130,17 +133,14 @@ bool CargarCITABIN(VETERINARIOS& listadeCitas) {
 
 		archivo.read(reinterpret_cast<char*>(&temp), sizeof(CITA));
 
-		agregarCita(crearCita(temp.ClaveVet, temp.Telefono, temp.Fecha, temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo));
+		agregarCitaFinal(crearCitaDirecto(temp.ClaveVet, temp.Telefono, temp.Fecha, temp.varHora, temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo, temp.Estatus, temp.Costo));
 
 		lectura += sizeof(CITA);
 
-
 	}
-
 	archivo.close();
 	return (lectura > 0);
 }
-
 
 void GuardarVETBIN(); 
 void GuardarCITABIN();
@@ -167,6 +167,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 	}	
 	LISTACITA.Origen = NULL;
 	LISTACITA.Fin = NULL;
+
+	//CargarCITABIN(LISTACITA);
 
 	// Ventana y ciclo de mensajes
 	ShowWindow(hWindow, cShow);
@@ -235,8 +237,8 @@ LRESULT CALLBACK AgendaDiaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 					IMAGE_BITMAP, 
 					75, 75,
 					LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE); 
-			if (imagen != NULL) 
-				SendMessage(GetDlgItem(hwnd, PC_AGENDA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen); 
+			if (imagen != NULL)
+				SendMessage(GetDlgItem(hwnd, PC_AGENDA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
 		
 		}
 		case WM_COMMAND: {
@@ -248,23 +250,23 @@ LRESULT CALLBACK AgendaDiaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 				// Casos de Agenda	
 				case CB_AGENDA_HORA: {
 					case CB_GETDROPPEDSTATE: {
-						HWND hDTPdia = GetDlgItem(hwnd, DTP_MEJOR_QUE_MONTHCALENDAR);
-						HWND hCBhora = GetDlgItem(hwnd, CB_AGENDA_HORA);
+						HWND hCBhora = GetDlgItem(hwnd, CB_ELIMINAR_HORA);
 						ComboBox_ResetContent(hCBhora);
-						SYSTEMTIME SysDia = { 0 }; double VarDia;
-						DateTime_GetSystemtime(hDTPdia, &SysDia);
-						SystemTimeToVariantTime(&SysDia, &VarDia);
-						crearTempListaCitaPorDia(ActiveVet, VarDia);
+						HWND hDTPdia = GetDlgItem(hwnd, DTP_MEJOR_QUE_MONTHCALENDAR);					
+						SYSTEMTIME sysDia = { 0 };		double varDia;						
+						DateTime_GetSystemtime(hDTPdia, &sysDia);						
+						SystemTimeToVariantTime(&sysDia, &varDia);					
+						
+						crearTempListaCitaPorDia(ActiveVet, varDia);
 						NODOCITA* TempCita = TEMP_LISTACITA.Origen;
+						char buff[200]; SYSTEMTIME SysHora = { 0 };
+
 						while (TempCita != NULL) {
-							ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->NombreCliente);
+							VariantTimeToSystemTime(TempCita->Dato->varHora, &SysHora);
+							formatoHora(&SysHora, buff);
+							ComboBox_AddString(hCBhora, (LPARAM)buff);
 							TempCita = TempCita->Siguiente;
 						}
-
-						HWND hCBhora = GetDlgItem(hwnd, CB_AGENDA_HORA);
-						char nombreOp[100];
-						ComboBox_GetLBText(hCBhora, ComboBox_GetCurSel(hCBhora), nombreOp);
-
 					}break;
 				}break;
 			}
@@ -277,7 +279,7 @@ LRESULT CALLBACK AgendaRangoCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 	switch (msg) {
 		case WM_INITDIALOG: {
 			NODOVET* busqueda = buscarPorClave(ActiveVet);
-			SetDlgItemText(hwnd, EDIT_VET_AGENDA, busqueda->Dato->Nombre);
+			SetDlgItemText(hwnd, EDIT_VET_AGENDA, busqueda->Dato->Nombre); 
 			SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta);
 
 			//Abrir imagen desde la ruta guardada
@@ -329,8 +331,12 @@ LRESULT CALLBACK AgendaRangoCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
 						crearTempListaCitaPorFechas(ActiveVet, fecha1, fecha2);
 						NODOCITA* TempCita = TEMP_LISTACITA.Origen;
+						char buff[200]; SYSTEMTIME SysHora = { 0 };
+
 						while (TempCita != NULL) {
-							ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->NombreCliente);
+							VariantTimeToSystemTime(TempCita->Dato->varHora, &SysHora);
+							formatoHora(&SysHora, buff);
+							ComboBox_AddString(hCBhora, (LPARAM)buff);
 							TempCita = TempCita->Siguiente;
 						}
 					}break;
@@ -359,8 +365,8 @@ LRESULT CALLBACK CitasCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 				IMAGE_BITMAP, 
 				75, 75,
 				LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE); 
-		if (imagen != NULL) 
-			SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
+		if (imagen != NULL)
+				SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
 	}
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
@@ -498,7 +504,7 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 				75, 75,
 				LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE);
 		if (imagen != NULL)
-			SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
+				SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
 
 	}
 	case WM_COMMAND: {
@@ -518,10 +524,14 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 					SystemTimeToVariantTime(&SysDia, &VarDia);
 					crearTempListaCitaPorDia(ActiveVet, VarDia);
 					NODOCITA* TempCita = TEMP_LISTACITA.Origen;
-					while (TempCita != NULL) {
-						ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->NombreCliente);
-						TempCita = TempCita->Siguiente;
-					}
+					char buff[200]; SYSTEMTIME SysHora = { 0 };
+
+						while (TempCita != NULL) {
+							VariantTimeToSystemTime(TempCita->Dato->varHora, &SysHora);
+							formatoHora(&SysHora, buff);
+							ComboBox_AddString(hCBhora, (LPARAM)buff);
+							TempCita = TempCita->Siguiente;
+						}
 				}break;
 			}break;
 			case BTN_MODIFICAR: {
@@ -857,6 +867,7 @@ BOOL Menu(INT opcion, HWND window0) {
 		}break;
 		case ID_SALIR_EXIT: {
 			GuardarVETBIN();
+			GuardarCITABIN();
 			int result = MessageBox(window0, "¿Desea cerrar el programa?", "Advertencia", 1);
 			if (result != 1)
 				break;
@@ -959,6 +970,7 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	//nuevo->Dia = &diaCitas;
 	//nuevo->Hora = &horaCitas;
 	nuevo->Fecha = fecha;
+	nuevo->varHora = (hora - (int)hora);
 	strcpy_s(nuevo->NombreCliente, 100, Nombre);	
 	nuevo->Telefono = GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
 	strcpy_s(nuevo->Especie, 20, Especie);
@@ -966,6 +978,24 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	strcpy_s(nuevo->Motivo, 500, Motivo);
 	strcpy_s(nuevo->Estatus, 20, Estatus);
 	nuevo->Costo = atof(Precio); //Probar
+	return nuevo;
+}
+CITA* crearCitaDirecto(int ClaveVet, int Telefono, double Fecha, double varHora, char* NombreCliente, char* Especie, char* NombreMascota, char* Motivo, char* Estatus, float Costo) {
+
+//	fecha = ((int)dia) + (hora - ((int)hora));
+
+	// Ingreso a la lista
+	CITA* nuevo = new CITA;
+	nuevo->ClaveVet = ClaveVet;
+	nuevo->Telefono = Telefono;
+	nuevo->Fecha = Fecha;
+	nuevo->varHora = varHora;
+	strcpy_s(nuevo->NombreCliente, 100, NombreCliente);
+	strcpy_s(nuevo->Especie, 20, Especie);
+	strcpy_s(nuevo->NombreMascota, 30, NombreMascota);
+	strcpy_s(nuevo->Motivo, 500, Motivo);
+	strcpy_s(nuevo->Estatus, 20, Estatus);
+	nuevo->Costo = Costo;
 	return nuevo;
 }
 void modCita(HWND hwnd, int claveVet) {
@@ -1168,6 +1198,54 @@ void agregarCitaFinal(CITA* dato) {
 		nodo->Siguiente = NULL;
 		TEMP_LISTACITA.Fin = nodo;
 	}
+}
+
+char* formatoHora(LPSYSTEMTIME Sys, char* buff) {
+
+	std::string strMessage;
+
+	CString cstrMessage;
+
+	cstrMessage.Format(_T("%d-%02d-%02d %02d:%02d:%02d.%03d"),
+		//Sys.wYear,
+		//Sys.wMonth,
+		//Sys.wDay,
+		Sys->wHour,
+		Sys->wMinute,
+		Sys->wSecond,
+		Sys->wMilliseconds);
+
+	strMessage = CT2A(cstrMessage.GetString());
+	std::cout << "System time = " << strMessage << std::endl;
+
+	std::ostringstream ossMessage;
+
+	/*  << Sys.wYear << "-"
+		<< std::setw(2) << std::setfill('0') << Sys.wMonth << "-"
+		<< std::setw(2) << std::setfill('0') << Sys.wDay << " "
+		<< std::setw(3) << std::setfill('0') << Sys->wMilliseconds;*/ 
+
+	ossMessage
+		<< std::setw(2) << std::setfill('0') << Sys->wHour << ":"
+		<< std::setw(2) << std::setfill('0') << Sys->wMinute << ":"
+		<< std::setw(2) << std::setfill('0') << Sys->wSecond << ".";	
+
+	strMessage = ossMessage.str();
+	std::cout << "System time = " << strMessage << std::endl;
+
+	/*Sys.wYear,
+		Sys.wMonth,
+		Sys.wDay,
+		Sys->wMilliseconds*/
+
+	sprintf_s(buff,
+		100,
+		"%02d:%02d:%02d",
+		Sys->wHour,
+		Sys->wMinute,
+		Sys->wSecond);
+	
+	return buff;
 }
 
 // Funciones de validación
