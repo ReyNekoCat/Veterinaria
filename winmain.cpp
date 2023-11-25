@@ -57,7 +57,8 @@ int ActiveVet = 000; // Veterinario actual (Bruh)
 
 // Declaración de funciones
 LRESULT CALLBACK LoginCallback(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK AgendaCallback(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK AgendaDiaCallback(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK AgendaRangoCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK CitasCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK PerfilModCallback(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK PerfilCrearCallback(HWND, UINT, WPARAM, LPARAM);
@@ -77,9 +78,15 @@ void agregarCita(CITA*);
 NODOCITA* buscarCitaPorDia(int, double);
 NODOCITA* buscarCitaPorFecha(int, double);
 void crearTempListaCitaPorDia(int, double);
+void crearTempListaCitaPorFechas(int, double, double);
 void agregarCitaFinal(CITA* dato);
 
-bool CargarVETBIN(VETERINARIOS& listaVeterinarios) { 
+bool ValidarLetras(const char*, int);
+bool ValidarNumeros(const char*, int, const char*, int, int);
+bool ValidarTelefono(const char*, int);
+bool ValidarPrecio(const char*, int);
+
+bool CargarVETBIN(VETERINARIOS& listaVeterinarios) {
 	ifstream archivo("Info de veterinarios.bin", ios::binary);
 	if (!archivo.is_open()) {
 		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
@@ -103,13 +110,7 @@ bool CargarVETBIN(VETERINARIOS& listaVeterinarios) {
 	archivo.close();
 	return (lectura > 0);
 }
-
-void GuardarVETBIN(); 
-
-bool ValidarLetras(const char*, int);
-bool ValidarNumeros(const char*, int, const char*, int, int);
-bool ValidarTelefono(const char*, int);
-bool ValidarPrecio(const char*, int);
+void GuardarVETBIN();
 
 // Función principal/Callbacks/Menu
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
@@ -156,7 +157,7 @@ LRESULT CALLBACK LoginCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 						if (strcmp(Busqueda->Dato->Password, wPassword) == 0){
 							ActiveVet = Busqueda->Dato->Clave;
-							HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORFECHA), NULL, AgendaCallback);
+							HWND window = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORFECHA), NULL, AgendaDiaCallback);
 							ShowWindow(window, SW_SHOW);
 							EndDialog(hwnd, 0);
 						}else
@@ -176,31 +177,29 @@ LRESULT CALLBACK LoginCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	}
 	return FALSE;
 }
-LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	/*HWND hCalendar = GetDlgItem(hwnd, CALENDAR_AGENDA);
-	SYSTEMTIME* fechaCalendar = { 0 };
-	DateTime_GetSystemtime(hCalendar, fechaCalendar);*/
+LRESULT CALLBACK AgendaDiaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 	switch (msg) {
-	case WM_INITDIALOG: { 
-		NODOVET* busqueda = buscarPorClave(ActiveVet); 
-		SetDlgItemText(hwnd, EDIT_VET_AGENDA, busqueda->Dato->Nombre); 
-		SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta); 
+		case WM_INITDIALOG: { 
+			NODOVET* busqueda = buscarPorClave(ActiveVet); 
+			SetDlgItemText(hwnd, EDIT_VET_AGENDA, busqueda->Dato->Nombre); 
+			SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta); 
 
-		//Abrir imagen desde la ruta guardada
-		OPENFILENAME ofn; 
-		ZeroMemory(&ofn, sizeof(ofn)); 
-		SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta); 
-		HBITMAP imagen = 
-			(HBITMAP)LoadImage( 
-				hInst, 
-				busqueda->Dato->FotoRuta, 
-				IMAGE_BITMAP, 
-				75, 75,
-				LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE); 
-		if (imagen != NULL) 
-			SendMessage(GetDlgItem(hwnd, PC_AGENDA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen); 
-	}
+			//Abrir imagen desde la ruta guardada
+			OPENFILENAME ofn; 
+			ZeroMemory(&ofn, sizeof(ofn)); 
+			SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta); 
+			HBITMAP imagen = 
+				(HBITMAP)LoadImage( 
+					hInst, 
+					busqueda->Dato->FotoRuta, 
+					IMAGE_BITMAP, 
+					75, 75,
+					LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE); 
+			if (imagen != NULL) 
+				SendMessage(GetDlgItem(hwnd, PC_AGENDA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen); 
+		
+		}
 		case WM_COMMAND: {
 			int ID = LOWORD(wParam);
 			if (Menu(ID, hwnd)) {
@@ -208,15 +207,94 @@ LRESULT CALLBACK AgendaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}				
 			switch (ID) {
 				// Casos de Agenda	
-				case CALENDAR_AGENDA: {
-					
-				}break;
 				case CB_AGENDA_HORA: {
-					HWND hCalendar = GetDlgItem(hwnd, CALENDAR_AGENDA);
-					SYSTEMTIME* fechaCalendar = { 0 };
-					MonthCal_GetCurSel(hCalendar, fechaCalendar);
+					case CB_GETDROPPEDSTATE: {
+						HWND hDTPdia = GetDlgItem(hwnd, DTP_MEJOR_QUE_MONTHCALENDAR);
+						HWND hCBhora = GetDlgItem(hwnd, CB_AGENDA_HORA);
+						ComboBox_ResetContent(hCBhora);
+						SYSTEMTIME SysDia = { 0 }; double VarDia;
+						DateTime_GetSystemtime(hDTPdia, &SysDia);
+						SystemTimeToVariantTime(&SysDia, &VarDia);
+						crearTempListaCitaPorDia(ActiveVet, VarDia);
+						NODOCITA* TempCita = TEMP_LISTACITA.Origen;
+						while (TempCita != NULL) {
+							ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->NombreCliente);
+							TempCita = TempCita->Siguiente;
+						}
 
+						HWND hCBhora = GetDlgItem(hwnd, CB_AGENDA_HORA);
+						char nombreOp[100];
+						ComboBox_GetLBText(hCBhora, ComboBox_GetCurSel(hCBhora), nombreOp);
 
+					}break;
+				}break;
+			}
+		}break;
+	}
+	return FALSE;
+}
+LRESULT CALLBACK AgendaRangoCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+
+	switch (msg) {
+		case WM_INITDIALOG: {
+			NODOVET* busqueda = buscarPorClave(ActiveVet);
+			SetDlgItemText(hwnd, EDIT_VET_AGENDA, busqueda->Dato->Nombre);
+			SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta);
+
+			//Abrir imagen desde la ruta guardada
+			OPENFILENAME ofn;
+			ZeroMemory(&ofn, sizeof(ofn));
+			SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta);
+			HBITMAP imagen =
+				(HBITMAP)LoadImage(
+					hInst,
+					busqueda->Dato->FotoRuta,
+					IMAGE_BITMAP,
+					75, 75,
+					LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE);
+			if (imagen != NULL)
+				SendMessage(GetDlgItem(hwnd, PC_AGENDA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
+
+		}
+		case WM_COMMAND: {
+			int ID = LOWORD(wParam);
+			if (Menu(ID, hwnd)) {
+				return FALSE;
+			}
+			switch (ID) {
+					// Casos de Agenda	
+				case CB_RANGO: {
+					case CB_GETDROPPEDSTATE: {
+						HWND hCBhora = GetDlgItem(hwnd, CB_RANGO);
+						ComboBox_ResetContent(hCBhora);
+
+						HWND hDTPdia1 = GetDlgItem(hwnd, DTP_RANGO_DIA1);
+						HWND hDTPhora1 = GetDlgItem(hwnd, DTP_RANGO_HORA1);
+						HWND hDTPdia2 = GetDlgItem(hwnd, DTP_RANGO_DIA2);
+						HWND hDTPhora2 = GetDlgItem(hwnd, DTP_RANGO_HORA2);
+						SYSTEMTIME Dia1 = { 0 };		double dia1;
+						SYSTEMTIME Hora1 = { 0 };	    double hora1;
+						SYSTEMTIME Dia2 = { 0 };	    double dia2;
+						SYSTEMTIME Hora2 = { 0 };       double hora2;
+						DateTime_GetSystemtime(hDTPdia1, &Dia1);
+						DateTime_GetSystemtime(hDTPhora1, &Hora1);
+						DateTime_GetSystemtime(hDTPdia2, &Dia2);
+						DateTime_GetSystemtime(hDTPhora2, &Hora2);
+						SystemTimeToVariantTime(&Dia1, &dia1);
+						SystemTimeToVariantTime(&Hora1, &hora1);
+						SystemTimeToVariantTime(&Dia2, &dia2);
+						SystemTimeToVariantTime(&Hora2, &hora2);
+						double fecha1, fecha2;
+						fecha1 = ((int)dia1) + (hora1 - ((int)hora1));
+						fecha2 = ((int)dia2) + (hora2 - ((int)hora2));
+
+						crearTempListaCitaPorFechas(ActiveVet, fecha1, fecha2);
+						NODOCITA* TempCita = TEMP_LISTACITA.Origen;
+						while (TempCita != NULL) {
+							ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->NombreCliente);
+							TempCita = TempCita->Siguiente;
+						}
+					}break;
 				}break;
 			}
 		}break;
@@ -383,20 +461,6 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 		if (imagen != NULL)
 			SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
 
-		//Horas de citas
-		HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
-		HWND hCBhora = GetDlgItem(hwnd, CB_MODIFICAR_HORA);
-		ComboBox_ResetContent(hCBhora);
-		SYSTEMTIME SysDia = { 0 }; double VarDia;
-		DateTime_GetSystemtime(hDTPdia, &SysDia);
-		SystemTimeToVariantTime(&SysDia, &VarDia);
-		crearTempListaCitaPorDia(ActiveVet, VarDia);
-		NODOCITA* TempCita = TEMP_LISTACITA.Origen;
-		while (TempCita != NULL) {
-			ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->NombreCliente);
-			TempCita = TempCita->Siguiente;
-		}
-		
 	}
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
@@ -405,11 +469,6 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
 		switch (ID) {
 			// Casos de Citas
-			case DTP_MODIFICAR_FECHA: {
-				case DTM_GETSYSTEMTIME : {
-					
-				};			
-			}break;
 			case CB_MODIFICAR_HORA: {
 				case CB_GETDROPPEDSTATE: {
 					HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
@@ -424,7 +483,6 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 						ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->NombreCliente);
 						TempCita = TempCita->Siguiente;
 					}
-
 				}break;
 			}break;
 			case BTN_MODIFICAR: {
@@ -716,12 +774,12 @@ BOOL Menu(INT opcion, HWND window0) {
 	switch (opcion) {
 		case MENU_AGENDA_PORFECHA: {		
 			DestroyWindow(window0);
-			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORFECHA), NULL, AgendaCallback);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORFECHA), NULL, AgendaDiaCallback);
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_AGENDA_PORRANGO: {
 			DestroyWindow(window0);
-			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORRANGO), NULL, AgendaCallback);
+			HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_AGENDA_PORRANGO), NULL, AgendaRangoCallback);
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case MENU_CITAS_NUEVA: {
@@ -997,7 +1055,7 @@ void agregarCita(CITA* dato) {
 		}
 		if (temp != NULL){
 			nodo->Anterior = temp;
-			nodo->Siguiente = temp->Siguiente; // Dereferencing NULL?? / temp was nullptr
+			nodo->Siguiente = temp->Siguiente;
 			temp->Siguiente->Anterior = nodo;
 			temp->Siguiente = nodo;
 		}
@@ -1042,6 +1100,19 @@ void crearTempListaCitaPorDia(int claveVet, double dia) {
 				}
 				indice = indice->Siguiente;
 			}
+	}
+}
+void crearTempListaCitaPorFechas(int claveVet, double fecha1, double fecha2) {
+	if (LISTACITA.Origen != nullptr) {
+		NODOCITA* indice = nuevoNodoCitaEXTRA(LISTACITA.Origen);
+		TEMP_LISTACITA.Origen = NULL;
+		TEMP_LISTACITA.Fin = NULL;
+		while (indice != NULL) {
+			if (indice->Dato->Fecha > fecha1 && indice->Dato->Fecha < fecha2) {
+				agregarCitaFinal(indice->Dato);
+			}
+			indice = indice->Siguiente;
+		}
 	}
 }
 void agregarCitaFinal(CITA* dato) {
