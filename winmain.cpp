@@ -3,8 +3,9 @@
 #include <oleauto.h> // Librería para administrar fechas
 #include <commctrl.h>
 #include <windowsx.h>
+#include <fstream> 
 #include "resource.h"
-
+using namespace std;
 // Declaración de estructuras
 struct VETERINARIO {
 	char Nombre[100];
@@ -68,6 +69,33 @@ void agregarCita(CITA*);
 NODOCITA* buscarCitaPorDia(int claveVet, SYSTEMTIME* dia);
 NODOCITA* buscarCitaPorFecha(int claveVet, int fecha);
 
+bool CargarVETBIN(VETERINARIOS& listaVeterinarios) { 
+	ifstream archivo("Info de veterinarios.bin", ios::binary);
+	if (!archivo.is_open()) {
+		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
+		return false;
+	}
+
+	archivo.seekg(0, ios::end);
+	unsigned int bytes = archivo.tellg();
+	archivo.seekg(0, ios::beg);
+
+	unsigned int lectura = 0;
+	while (lectura < bytes) {
+		VETERINARIO temp;
+		archivo.read(reinterpret_cast<char*>(&temp), sizeof(VETERINARIO));
+
+		agregarVetFinal(crearVet(temp.Nombre, temp.Cedula, temp.Clave, temp.FotoRuta, temp.Password));
+
+		lectura += sizeof(VETERINARIO);
+	}
+
+	archivo.close();
+	return (lectura > 0);
+}
+
+void GuardarVETBIN(); 
+
 bool ValidarLetras(const char*, int);
 bool ValidarNumeros(const char*, int, const char*, int, int);
 bool ValidarTelefono(const char*, int);
@@ -80,7 +108,13 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 	HWND hWindow = CreateDialog(hInst, MAKEINTRESOURCE(DLG_LOGIN), NULL, LoginCallback);
 	MSG Msg;
 	ZeroMemory(&Msg, sizeof(Msg));
-	agregarVetFinal(crearVet((char*)"Administrador", 1234567, 001, (char*)"X", (char*)"1"));
+
+	if (CargarVETBIN(LISTAVET)) {
+
+	}
+	else {
+		agregarVetFinal(crearVet((char*)"Administrador", 1234567, 001, (char*)"X", (char*)"1"));
+	}	
 	LISTACITA.Origen = NULL;
 	LISTACITA.Fin = NULL;
 
@@ -548,6 +582,7 @@ BOOL Menu(INT opcion, HWND window0) {
 			ShowWindow(window1, SW_SHOW);
 		}break;
 		case ID_SALIR_EXIT: {
+			GuardarVETBIN();
 			int result = MessageBox(window0, "¿Desea cerrar el programa?", "Advertencia", 1);
 			if (result != 1)
 				break;
@@ -848,4 +883,33 @@ bool ValidarPrecio(const char* cPRECIO, int PRECIO) {
 		return false;
 	}
 	return true;
+
+}
+
+
+
+//Funcion par a guardar en archivos binarios
+void GuardarVETBIN() {
+	ofstream archivo("Info de veterinarios.bin", ios::binary | ios::out | ios::trunc);
+	if (!archivo.is_open()) {
+		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
+		return;
+	}
+
+	NODOVET* actual = LISTAVET.Origen;
+	while (actual != NULL) {
+		if (archivo.bad()) {
+			MessageBox(NULL, "Ocurrió un error durante la escritura", "Error", MB_OK | MB_ICONERROR);
+			return;
+		}
+
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Nombre), sizeof(actual->Dato->Nombre));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Cedula), sizeof(actual->Dato->Cedula));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Clave), sizeof(actual->Dato->Clave));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->FotoRuta), sizeof(actual->Dato->FotoRuta));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Password), sizeof(actual->Dato->Password));
+
+		actual = actual->Siguiente;
+	}
+	archivo.close();
 }
