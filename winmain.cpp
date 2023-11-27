@@ -81,6 +81,7 @@ NODOCITA* nuevoNodoCitaEXTRA(NODOCITA*);
 void agregarCita(CITA*);
 NODOCITA* buscarCitaPorDia(int, double);
 NODOCITA* buscarCitaPorFecha(int, double);
+NODOCITA* buscarCitaPorHora(int, double);
 void crearTempListaCitaPorDia(int, double);
 void crearTempListaCitaPorFechas(int, double, double);
 void agregarCitaFinal(CITA*);
@@ -268,6 +269,20 @@ LRESULT CALLBACK AgendaDiaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 							TempCita = TempCita->Siguiente;
 						}
 					}break;
+					case BN_CLICKED: {
+
+						char GetHora[20]; HWND hCBhora = GetDlgItem(hwnd, CB_ELIMINAR_HORA);
+						ComboBox_GetLBText(hCBhora, ComboBox_GetCurSel(hCBhora), (LPARAM)GetHora);
+						if (buscarCitaPorHora(ActiveVet, atof(GetHora)) != 0 || buscarCitaPorHora(ActiveVet, atof(GetHora)) != nullptr) {
+							SetDlgItemText(hwnd, EDIT_NOMBRE, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreCliente);
+							SetDlgItemInt(hwnd, EDIT_TEL, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Telefono, NULL);
+							SetDlgItemText(hwnd, EDIT_MASCOTA, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreMascota);
+							SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreMascota);
+							SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Estatus);
+							SetDlgItemText(hwnd, EDIT_MOTIVO, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Motivo);
+							SetDlgItemInt(hwnd, EDIT_PRECIO, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Costo, NULL);
+						}
+					}	
 				}break;
 			}
 		}break;
@@ -338,6 +353,17 @@ LRESULT CALLBACK AgendaRangoCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 							formatoHora(&SysHora, buff);
 							ComboBox_AddString(hCBhora, (LPARAM)buff);
 							TempCita = TempCita->Siguiente;
+						}
+						char GetHora[20];
+						ComboBox_GetLBText(hCBhora, ComboBox_GetCurSel(hCBhora), (LPARAM)GetHora);
+						if (buscarCitaPorHora(ActiveVet, atof(GetHora)) != 0 || buscarCitaPorHora(ActiveVet, atof(GetHora)) != nullptr) {
+							SetDlgItemText(hwnd, EDIT_NOMBRE, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreCliente);
+							SetDlgItemInt(hwnd, EDIT_TEL, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Telefono, NULL);
+							SetDlgItemText(hwnd, EDIT_MASCOTA, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreMascota);
+							SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreMascota);
+							SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Estatus);
+							SetDlgItemText(hwnd, EDIT_MOTIVO, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Motivo);
+							SetDlgItemInt(hwnd, EDIT_PRECIO, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Costo, NULL);
 						}
 					}break;
 				}break;
@@ -531,16 +557,26 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 							formatoHora(&SysHora, buff);
 							ComboBox_AddString(hCBhora, (LPARAM)buff);
 							TempCita = TempCita->Siguiente;
-						}
-				}
-									   HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
-									   ComboBox_GetCurSel(hDTPdia);
-				
-				if (opc >= 0) {
-					WCHAR text[255] = { 0 };
-					SendMessage(GetDlgItem(hwnd, CB_MODIFICAR_HORA), CB_GETLBTEXT, opc, (LPARAM)text);
+						}									
 				}
 		
+			// Case pendiente
+			char GetHora[20]; 
+			HWND hCBhora = GetDlgItem(hwnd, CB_ELIMINAR_HORA);
+			HWND hName = GetDlgItem(hwnd, EDIT_NOMBRE);
+			ComboBox_GetLBText(hCBhora, ComboBox_GetCurSel(hCBhora), (LPARAM)GetHora);
+
+			if (buscarCitaPorHora(ActiveVet, atof(GetHora)) != 0 || buscarCitaPorHora(ActiveVet, atof(GetHora)) != nullptr) {
+				SetDlgItemText(hwnd, EDIT_NOMBRE, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreCliente);
+				SetDlgItemInt(hwnd, EDIT_TEL, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Telefono, NULL);
+				SetDlgItemText(hwnd, EDIT_MASCOTA, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreMascota);
+				SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreMascota);
+				SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Estatus);
+				SetDlgItemText(hwnd, EDIT_MOTIVO, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Motivo);
+				SetDlgItemInt(hwnd, EDIT_PRECIO, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Costo, NULL);
+
+			}
+				
 			}break;
 			case BTN_MODIFICAR: {
 				//Validar Nombre del dueño
@@ -1159,6 +1195,20 @@ NODOCITA* buscarCitaPorFecha(int claveVet, double fecha){
 
 	while (indice != NULL) {
 		if (indice->Dato->Fecha == fecha) {
+			return indice;
+			break;
+		}
+		indice = indice->Siguiente;
+	}
+	return NULL;
+}
+NODOCITA* buscarCitaPorHora(int claveVet, double hora) {
+	if (LISTACITA.Origen == NULL)
+		return NULL;
+	NODOCITA* indice = LISTACITA.Origen;
+
+	while (indice != NULL) {
+		if (indice->Dato->varHora == hora) {
 			return indice;
 			break;
 		}
