@@ -75,6 +75,8 @@
 #define PC_AGENDA_FOTO                  1053
 #define EDIT_VET_CITA                   1054
 #define PC_CITA_FOTO                    1055
+#define IDC_BUTTON1                     1056
+#define BTN_ACEPTAR_HORA                1056
 #define MENU_AGENDA                     40001
 #define MENU_CITAS                      40002
 #define MENU_PERFIL                     40003
@@ -98,7 +100,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        110
 #define _APS_NEXT_COMMAND_VALUE         40025
-#define _APS_NEXT_CONTROL_VALUE         1056
+#define _APS_NEXT_CONTROL_VALUE         1057
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
