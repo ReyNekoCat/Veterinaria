@@ -417,15 +417,20 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 		HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
 		HWND hCBhora = GetDlgItem(hwnd, CB_MODIFICAR_HORA);
 		ComboBox_ResetContent(hCBhora);
-		SYSTEMTIME SysDia = { 0 }; double VarDia;
+		SYSTEMTIME SysDia = { 0 };          double VarDia;
+		SYSTEMTIME SysfechaActual = { 0 };  double fechaActual = 0;
 		DateTime_GetSystemtime(hDTPdia, &SysDia);
+		GetLocalTime(&SysfechaActual);
 		SystemTimeToVariantTime(&SysDia, &VarDia);
 		crearTempListaCitaPorDia(ActiveVet, VarDia);
+		SystemTimeToVariantTime(&SysfechaActual, &fechaActual);
 		NODOCITA* TempCita = TEMP_LISTACITA.Origen;
 
 		//Seteo del ComboBox
 		while (TempCita != NULL) {
-			ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->FormatHora);
+			if (TempCita->Dato->Fecha > fechaActual) {
+				ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->FormatHora);
+			}
 			TempCita = TempCita->Siguiente;
 		}
 
@@ -444,16 +449,21 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 					//Creación de la Lista de Citas Temporal
 					HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
 					HWND hCBhora = GetDlgItem(hwnd, CB_MODIFICAR_HORA);
-					ComboBox_ResetContent(hCBhora); //Este es el gran dilema
-					SYSTEMTIME SysDia = { 0 }; double VarDia;
+					ComboBox_ResetContent(hCBhora);
+					SYSTEMTIME SysDia = { 0 };          double VarDia;
+					SYSTEMTIME SysfechaActual = { 0 };  double fechaActual = 0;
 					DateTime_GetSystemtime(hDTPdia, &SysDia);
+					GetLocalTime(&SysfechaActual);
 					SystemTimeToVariantTime(&SysDia, &VarDia);
 					crearTempListaCitaPorDia(ActiveVet, VarDia);
+					SystemTimeToVariantTime(&SysfechaActual, &fechaActual);
 					NODOCITA* TempCita = TEMP_LISTACITA.Origen;
 
 					//Seteo del ComboBox
 					while (TempCita != NULL) {
-						ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->FormatHora);
+						if (TempCita->Dato->Fecha > fechaActual) {
+							ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->FormatHora);
+						}
 						TempCita = TempCita->Siguiente;
 					}
 				}break;
