@@ -912,20 +912,6 @@ void agregarVetFinal(VETERINARIO* dato) {
 		LISTAVET.Fin = nodo;		
 	}
 }
-NODOVET* buscarPorClave(int buscar) {
-	if (LISTAVET.Origen == NULL)
-		return NULL;
-	NODOVET* indice = LISTAVET.Origen;
-
-	while (indice != NULL) {
-		if (indice->Dato->Clave == buscar) {
-			return indice;
-			break;
-		}
-		indice = indice->Siguiente;
-	}
-	return NULL;
-}
 CITA* crearCita(HWND hwnd, int claveVet){
 	HWND hDia = GetDlgItem(hwnd, DTP_CREAR_FECHA);
 	HWND hHora = GetDlgItem(hwnd, DTP_CREAR_HORA);
@@ -1124,48 +1110,6 @@ void agregarCita(CITA* dato) {
 		}
 	}
 }
-NODOCITA* buscarCitaPorDia(int claveVet, double dia) {
-	if (LISTACITA.Origen == NULL)
-		return NULL;
-	NODOCITA* indice = LISTACITA.Origen;
-
-	while (indice != NULL) {
-		if ((int)indice->Dato->Fecha == (int)dia) {
-			return indice;
-			break;
-		}
-		indice = indice->Siguiente;
-	}
-	return NULL;
-}
-NODOCITA* buscarCitaPorFecha(int claveVet, double fecha){
-	if (LISTACITA.Origen == NULL)
-		return NULL;
-	NODOCITA* indice = LISTACITA.Origen;
-
-	while (indice != NULL) {
-		if (indice->Dato->Fecha == fecha) {
-			return indice;
-			break;
-		}
-		indice = indice->Siguiente;
-	}
-	return NULL;
-}
-NODOCITA* buscarCitaPorFormatHora(int claveVet, char* hora, double dia) {
-	if (LISTACITA.Origen == NULL)
-		return NULL;
-	NODOCITA* indice = LISTACITA.Origen;	
-
-	while (indice != NULL) {
-		if (strcmp(indice->Dato->FormatHora, hora) == 0 && indice->Dato->varDia == (int)dia) {
-			return indice;
-			break;
-		}
-		indice = indice->Siguiente;
-	}
-	return NULL;
-}
 void crearTempListaCitaPorDia(int claveVet, double dia) {
 	if(LISTACITA.Origen != nullptr){
 		NODOCITA* indice = nuevoNodoCitaEXTRA(LISTACITA.Origen);
@@ -1206,6 +1150,62 @@ void agregarCitaFinal(CITA* dato) {
 		nodo->Siguiente = NULL;
 		TEMP_LISTACITA.Fin = nodo;
 	}
+}
+NODOVET* buscarPorClave(int buscar) {
+	if (LISTAVET.Origen == NULL)
+		return NULL;
+	NODOVET* indice = LISTAVET.Origen;
+
+	while (indice != NULL) {
+		if (indice->Dato->Clave == buscar) {
+			return indice;
+			break;
+		}
+		indice = indice->Siguiente;
+	}
+	return NULL;
+}
+NODOCITA* buscarCitaPorDia(int claveVet, double dia) {
+	if (LISTACITA.Origen == NULL)
+		return NULL;
+	NODOCITA* indice = LISTACITA.Origen;
+
+	while (indice != NULL) {
+		if ((int)indice->Dato->Fecha == (int)dia) {
+			return indice;
+			break;
+		}
+		indice = indice->Siguiente;
+	}
+	return NULL;
+}
+NODOCITA* buscarCitaPorFecha(int claveVet, double fecha) {
+	if (LISTACITA.Origen == NULL)
+		return NULL;
+	NODOCITA* indice = LISTACITA.Origen;
+
+	while (indice != NULL) {
+		if (indice->Dato->Fecha == fecha) {
+			return indice;
+			break;
+		}
+		indice = indice->Siguiente;
+	}
+	return NULL;
+}
+NODOCITA* buscarCitaPorFormatHora(int claveVet, char* hora, double dia) {
+	if (LISTACITA.Origen == NULL)
+		return NULL;
+	NODOCITA* indice = LISTACITA.Origen;
+
+	while (indice != NULL) {
+		if (strcmp(indice->Dato->FormatHora, hora) == 0 && indice->Dato->varDia == (int)dia) {
+			return indice;
+			break;
+		}
+		indice = indice->Siguiente;
+	}
+	return NULL;
 }
 
 char* formatoHora(LPSYSTEMTIME Sys, char* buff) {
