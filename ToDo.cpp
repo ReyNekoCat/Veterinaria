@@ -21,7 +21,7 @@
 
  - Fecha y hora
 	> Debe tener un formato libre /HECHO
-	> Evitar la creación con una fecha pasada
+	> Evitar la creación con una fecha pasada /HECHO
 	> Evitar la modificación de citas pasadas
 
  - Nombre del cliente (Dueño de la mascota) /HECHO
