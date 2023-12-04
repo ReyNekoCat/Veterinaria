@@ -94,65 +94,10 @@ bool ValidarNumeros(const char*, int, const char*, int, int);
 bool ValidarTelefono(const char*, int);
 bool ValidarPrecio(const char*, int);
 
-bool CargarVETBIN(VETERINARIOS& listaVeterinarios) {
-	ifstream archivo("Info de veterinarios.bin", ios::binary);
-	if (!archivo.is_open()) {
-		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
-		return false;
-	}
-
-	archivo.seekg(0, ios::end);
-	unsigned int bytes = archivo.tellg();
-	archivo.seekg(0, ios::beg);
-
-	unsigned int lectura = 0;
-	while (lectura < bytes) {
-		VETERINARIO temp;
-		archivo.read(reinterpret_cast<char*>(&temp), sizeof(VETERINARIO));
-
-		agregarVetFinal(crearVet(temp.Nombre, temp.Cedula, temp.Clave, temp.FotoRuta, temp.Password));
-
-		lectura += sizeof(VETERINARIO);
-	}
-
-	archivo.close();
-	return (lectura > 0);
-}
-
-bool CargarCITABIN(CITA& listadeCitas) {
-	ifstream archivo("Info de citas.bin", ios::binary);
-	if (!archivo.is_open()) {
-		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
-		return false;
-	}
-
-	archivo.seekg(0, ios::end);
-	unsigned int bytes = archivo.tellg();
-	archivo.seekg(0, ios::beg);
-
-	unsigned int lectura = 0;
-	while (lectura < bytes) {
-		CITA temp;
-
-		archivo.read(reinterpret_cast<char*>(&temp), sizeof(CITA));
-
-		agregarCitaFinal(crearCitaDirecto(temp.ClaveVet, temp.Telefono, temp.Fecha, temp.varHora, temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo, temp.Estatus, temp.Costo));
-
-		lectura += sizeof(CITA);
-
-	}
-	archivo.close();
-	return (lectura > 0);
-}
-
-void GuardarVETBIN(); 
-void GuardarCITABIN();
-bool ValidarLetras(const char*, int);
-bool ValidarNumeros(const char*, int, const char*, int, int);
-bool ValidarTelefono(const char*, int);
-bool ValidarPrecio(const char*, int);
-
-void GuardarVETBIN();
+void GuardarVETBIN(void); 
+void GuardarCITABIN(void);
+bool CargarVETBIN(VETERINARIOS&);
+bool CargarCITABIN(CITA&);
 
 // Función principal/Callbacks/Menu
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
@@ -271,22 +216,6 @@ LRESULT CALLBACK AgendaDiaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 							TempCita = TempCita->Siguiente;
 						}
 					}break;
-					/*
-					case BN_CLICKED: {
-
-						char GetHora[20]; HWND hCBhora = GetDlgItem(hwnd, CB_ELIMINAR_HORA);
-						ComboBox_GetLBText(hCBhora, ComboBox_GetCurSel(hCBhora), (LPARAM)GetHora);
-						if (buscarCitaPorHora(ActiveVet, atof(GetHora)) != 0 || buscarCitaPorHora(ActiveVet, atof(GetHora)) != nullptr) {
-							SetDlgItemText(hwnd, EDIT_NOMBRE, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreCliente);
-							SetDlgItemInt(hwnd, EDIT_TEL, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Telefono, NULL);
-							SetDlgItemText(hwnd, EDIT_MASCOTA, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreMascota);
-							SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreMascota);
-							SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Estatus);
-							SetDlgItemText(hwnd, EDIT_MOTIVO, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Motivo);
-							SetDlgItemInt(hwnd, EDIT_PRECIO, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Costo, NULL);
-						}
-					}
-					*/
 						
 				}break;
 			}
@@ -530,10 +459,9 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 		OPENFILENAME ofn;
 		ZeroMemory(&ofn, sizeof(ofn));
 		SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta);
-		HBITMAP imagen =
-			(HBITMAP)LoadImage(hInst, busqueda->Dato->FotoRuta, IMAGE_BITMAP, 75, 75, LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE);
+		HBITMAP imagen = (HBITMAP)LoadImage(hInst, busqueda->Dato->FotoRuta, IMAGE_BITMAP, 75, 75, LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE);
 		if (imagen != NULL)
-				SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
+			SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
 
 		//Creación de la Lista de Citas Temporal
 		HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
@@ -544,22 +472,41 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 		SystemTimeToVariantTime(&SysDia, &VarDia);
 		crearTempListaCitaPorDia(ActiveVet, VarDia);
 		NODOCITA* TempCita = TEMP_LISTACITA.Origen;
-		
+
 		//Seteo del ComboBox
 		while (TempCita != NULL) {
 			ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->FormatHora);
 			TempCita = TempCita->Siguiente;
 		}
 
-	}
+	}break;
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
 		if (Menu(ID, hwnd))
 			return FALSE;
 		switch (ID) {
 			// Casos de Citas
+			case DTP_MODIFICAR_FECHA: {
+				// Ni siquiera entra a este case
+			}break;
 			case CB_MODIFICAR_HORA: {
+				case CBN_DROPDOWN: {
+					//Creación de la Lista de Citas Temporal
+					HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
+					HWND hCBhora = GetDlgItem(hwnd, CB_MODIFICAR_HORA);
+					ComboBox_ResetContent(hCBhora); //Este es el gran dilema
+					SYSTEMTIME SysDia = { 0 }; double VarDia;
+					DateTime_GetSystemtime(hDTPdia, &SysDia);
+					SystemTimeToVariantTime(&SysDia, &VarDia);
+					crearTempListaCitaPorDia(ActiveVet, VarDia);
+					NODOCITA* TempCita = TEMP_LISTACITA.Origen;
 
+					//Seteo del ComboBox
+					while (TempCita != NULL) {
+						ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->FormatHora);
+						TempCita = TempCita->Siguiente;
+					}
+				}break;
 			}break;
 			case BTN_ACEPTAR_HORA: {
 				char GetHora[20];
@@ -1390,7 +1337,7 @@ bool ValidarPrecio(const char* cPRECIO, int PRECIO) {
 
 }
 
-//Funcion par a guardar en archivos binarios
+// Funciones para guardar/cargar archivos binarios
 void GuardarVETBIN() {
 	ofstream archivo("Info de veterinarios.bin", ios::binary | ios::out | ios::trunc);
 	if (!archivo.is_open()) {
@@ -1415,8 +1362,6 @@ void GuardarVETBIN() {
 	}
 	archivo.close();
 }
-
-////GUARDAR CITAS////
 void GuardarCITABIN() { 
 
 	ofstream archivo("Info de citas.bin", ios::binary | ios::out | ios::trunc);
@@ -1446,4 +1391,52 @@ void GuardarCITABIN() {
 	} 
 	archivo.close(); 
 } 
+bool CargarVETBIN(VETERINARIOS& listaVeterinarios) {
+	ifstream archivo("Info de veterinarios.bin", ios::binary);
+	if (!archivo.is_open()) {
+		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
+		return false;
+	}
 
+	archivo.seekg(0, ios::end);
+	unsigned int bytes = archivo.tellg();
+	archivo.seekg(0, ios::beg);
+
+	unsigned int lectura = 0;
+	while (lectura < bytes) {
+		VETERINARIO temp;
+		archivo.read(reinterpret_cast<char*>(&temp), sizeof(VETERINARIO));
+
+		agregarVetFinal(crearVet(temp.Nombre, temp.Cedula, temp.Clave, temp.FotoRuta, temp.Password));
+
+		lectura += sizeof(VETERINARIO);
+	}
+
+	archivo.close();
+	return (lectura > 0);
+}
+bool CargarCITABIN(CITA& listadeCitas) {
+	ifstream archivo("Info de citas.bin", ios::binary);
+	if (!archivo.is_open()) {
+		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
+		return false;
+	}
+
+	archivo.seekg(0, ios::end);
+	unsigned int bytes = archivo.tellg();
+	archivo.seekg(0, ios::beg);
+
+	unsigned int lectura = 0;
+	while (lectura < bytes) {
+		CITA temp;
+
+		archivo.read(reinterpret_cast<char*>(&temp), sizeof(CITA));
+
+		agregarCitaFinal(crearCitaDirecto(temp.ClaveVet, temp.Telefono, temp.Fecha, temp.varHora, temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo, temp.Estatus, temp.Costo));
+
+		lectura += sizeof(CITA);
+
+	}
+	archivo.close();
+	return (lectura > 0);
+}
