@@ -75,7 +75,7 @@ NODOVET* nuevoNodoVet(VETERINARIO*);
 void agregarVetFinal(VETERINARIO*);
 NODOVET* buscarPorClave(int);
 CITA* crearCita(HWND, int);
-CITA* crearCitaDirecto(int, int, double, double, char*, char*, char*, char*, char*, float);
+CITA* crearCitaDirecto(int, int, double, double,double,char*, char*, char*, char*, char*, char*, float);
 void modCita(HWND, int);
 void deleteCita(HWND, int);
 NODOCITA* nuevoNodoCita(CITA*);
@@ -97,7 +97,7 @@ bool ValidarPrecio(const char*, int);
 void GuardarVETBIN(void); 
 void GuardarCITABIN(void);
 bool CargarVETBIN(VETERINARIOS&);
-bool CargarCITABIN(CITA&);
+bool CargarCITABIN(CITAS&);
 
 // Función principal/Callbacks/Menu
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
@@ -112,10 +112,15 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 	}
 	else {
 		agregarVetFinal(crearVet((char*)"Administrador", 1234567, 001, (char*)"X", (char*)"1"));
-	}	
-	LISTACITA.Origen = NULL;
-	LISTACITA.Fin = NULL;
+	}
 
+
+	
+	LISTACITA.Origen = NULL;
+
+	LISTACITA.Fin = NULL;
+	
+	
 	//CargarCITABIN(LISTACITA);
 
 	// Ventana y ciclo de mensajes
@@ -925,7 +930,7 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	nuevo->Costo = atof(Precio); //Probar
 	return nuevo;
 }
-CITA* crearCitaDirecto(int ClaveVet, int Telefono, double Fecha, double varHora, char* NombreCliente, char* Especie, char* NombreMascota, char* Motivo, char* Estatus, float Costo) {
+CITA* crearCitaDirecto(int ClaveVet, int Telefono, double Fecha, double varHora, double varDia,char* FormatHora,char* NombreCliente, char* Especie, char* NombreMascota, char* Motivo, char* Estatus, float Costo) {
 
 //	fecha = ((int)dia) + (hora - ((int)hora));
 
@@ -935,6 +940,8 @@ CITA* crearCitaDirecto(int ClaveVet, int Telefono, double Fecha, double varHora,
 	nuevo->Telefono = Telefono;
 	nuevo->Fecha = Fecha;
 	nuevo->varHora = varHora;
+	nuevo->varDia = varDia;
+	strcpy_s(nuevo->FormatHora, 15, FormatHora); 
 	strcpy_s(nuevo->NombreCliente, 100, NombreCliente);
 	strcpy_s(nuevo->Especie, 20, Especie);
 	strcpy_s(nuevo->NombreMascota, 30, NombreMascota);
@@ -1326,13 +1333,11 @@ void GuardarVETBIN() {
 	archivo.close();
 }
 void GuardarCITABIN() { 
-
 	ofstream archivo("Info de citas.bin", ios::binary | ios::out | ios::trunc);
 	if (!archivo.is_open()) {
 		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
 		return;
 	}
-
 	NODOCITA* actual = LISTACITA.Origen;  
 	while (actual != NULL) {
 		if (archivo.bad()) {
@@ -1343,6 +1348,9 @@ void GuardarCITABIN() {
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->ClaveVet), sizeof(actual->Dato->ClaveVet));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->Telefono), sizeof(actual->Dato->Telefono));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->Fecha), sizeof(actual->Dato->Fecha));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->varHora), sizeof(actual->Dato->varHora));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->varDia), sizeof(actual->Dato->varDia));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->FormatHora), sizeof(actual->Dato->FormatHora));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->NombreCliente), sizeof(actual->Dato->NombreCliente));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->Especie), sizeof(actual->Dato->Especie));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->NombreMascota), sizeof(actual->Dato->NombreMascota));
@@ -1395,7 +1403,7 @@ bool CargarCITABIN(CITA& listadeCitas) {
 
 		archivo.read(reinterpret_cast<char*>(&temp), sizeof(CITA));
 
-		agregarCitaFinal(crearCitaDirecto(temp.ClaveVet, temp.Telefono, temp.Fecha, temp.varHora, temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo, temp.Estatus, temp.Costo));
+		agregarCitaFinal(crearCitaDirecto(temp.ClaveVet, temp.Telefono, temp.Fecha, temp.varHora, temp.varDia, temp.FormatHora , temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo, temp.Estatus, temp.Costo));
 
 		lectura += sizeof(CITA);
 
