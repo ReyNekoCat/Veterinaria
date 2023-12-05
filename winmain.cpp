@@ -969,7 +969,7 @@ void modCita(HWND hwnd, int claveVet) {
 	HWND hMotivo = GetDlgItem(hwnd, EDIT_MOTIVO);
 
 	char FormatHora[15], Nombre[100], NombreMascota[30], Motivo[500], Especie[20], Estatus[20], Precio[10];
-	int Telefono = 0; float Costo = 0;
+	float Costo = 0;
 	double hora = 0;
 	double dia = 0;
 	double fecha = 0;
@@ -981,7 +981,7 @@ void modCita(HWND hwnd, int claveVet) {
 	GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota) + 1);
 	GetDlgItemText(hwnd, EDIT_MOTIVO, Motivo, GetWindowTextLength(hMotivo) + 1);
 	GetDlgItemText(hwnd, EDIT_PRECIO, Precio, GetWindowTextLength(hPrecio) + 1);
-	GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
+	
 	ComboBox_GetText(hEspecie, Especie, GetWindowTextLength(hEspecie) + 1);
 	ComboBox_GetText(hEspecie, Estatus, GetWindowTextLength(hStatus) + 1);
 	DateTime_GetSystemtime(hDia, &diaCitas);
@@ -991,7 +991,7 @@ void modCita(HWND hwnd, int claveVet) {
 
 	// Ingreso a la lista
 	strcpy_s(original->Dato->NombreCliente, 100, Nombre);
-	original->Dato->Telefono = Telefono;
+	original->Dato->Telefono = GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
 	strcpy_s(original->Dato->Especie, 20, Especie);
 	strcpy_s(original->Dato->NombreMascota, 30, NombreMascota);
 	strcpy_s(original->Dato->Motivo, 500, Motivo);

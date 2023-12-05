@@ -22,7 +22,7 @@
  - Fecha y hora
 	> Debe tener un formato libre /HECHO
 	> Evitar la creación con una fecha pasada /HECHO
-	> Evitar la modificación de citas pasadas
+	> Evitar la modificación de citas pasadas 
 
  - Nombre del cliente (Dueño de la mascota) /HECHO
 
@@ -48,10 +48,10 @@
 
  AGENDA [Visualizador principal de la app]
  - Estará en la ventana principal /HECHO
- - Visualizar las citas ordenadas de la más próxima a la más lejana
- - Mostrar las citas de hoy en adelante (No mostrar las citas pasadas)
+ - Visualizar las citas ordenadas de la más próxima a la más lejana /HECHO
+ - Mostrar las citas de hoy en adelante (No mostrar las citas pasadas) /HECHO
  - Visualizar, modificar y eliminar cada cita (o redirigir a una sección para realizar estas acciones)
- - En la vista de cada cita se debe mostrar toda la información, además de la cantidad a pagar
+ - En la vista de cada cita se debe mostrar toda la información, además de la cantidad a pagar /HECHO
  - Se debe agregar una pantalla para consultar citas en un rango de fechas
 
  ABC [Altas/Bajas/Cambios]
