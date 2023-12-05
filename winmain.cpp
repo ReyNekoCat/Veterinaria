@@ -36,6 +36,7 @@ struct CITA {
 	double varHora;
 	double varDia;
 	char FormatHora[15];
+	char FormatFecha[30];
 	char NombreCliente[100];	
 	char Especie[20];
 	char NombreMascota[30];
@@ -75,7 +76,7 @@ NODOVET* nuevoNodoVet(VETERINARIO*);
 void agregarVetFinal(VETERINARIO*);
 NODOVET* buscarPorClave(int);
 CITA* crearCita(HWND, int);
-CITA* crearCitaDirecto(int, int, double, double,double,char*, char*, char*, char*, char*, char*, float);
+CITA* crearCitaDirecto(int, int, double, double, double, char*, char*, char*, char*, char*, char*, char*, float);
 void modCita(HWND, int);
 void deleteCita(HWND, int);
 NODOCITA* nuevoNodoCita(CITA*);
@@ -84,10 +85,13 @@ void agregarCita(CITA*);
 NODOCITA* buscarCitaPorDia(int, double);
 NODOCITA* buscarCitaPorFecha(int, double);
 NODOCITA* buscarCitaPorFormatHora(int, char*, double);
+NODOCITA* buscarCitaPorFormatFecha(int, char*);
 void crearTempListaCitaPorDia(int, double);
 void crearTempListaCitaPorFechas(int, double, double);
 void agregarCitaFinal(CITA*);
+
 char* formatoHora(LPSYSTEMTIME, char*);
+char* formatoFecha(LPSYSTEMTIME, char*);
 
 bool ValidarLetras(const char*, int);
 bool ValidarNumeros(const char*, int, const char*, int, int);
@@ -183,16 +187,9 @@ LRESULT CALLBACK AgendaDiaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 			OPENFILENAME ofn; 
 			ZeroMemory(&ofn, sizeof(ofn)); 
 			SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta); 
-			HBITMAP imagen = 
-				(HBITMAP)LoadImage( 
-					hInst, 
-					busqueda->Dato->FotoRuta, 
-					IMAGE_BITMAP, 
-					75, 75,
-					LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE); 
+			HBITMAP imagen = (HBITMAP)LoadImage(hInst, busqueda->Dato->FotoRuta, IMAGE_BITMAP, 75, 75, LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE); 
 			if (imagen != NULL)
-				SendMessage(GetDlgItem(hwnd, PC_AGENDA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
-		
+				SendMessage(GetDlgItem(hwnd, PC_AGENDA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);	
 		}
 		case WM_COMMAND: {
 			int ID = LOWORD(wParam);
@@ -202,26 +199,50 @@ LRESULT CALLBACK AgendaDiaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 			switch (ID) {
 				// Casos de Agenda	
 				case CB_AGENDA_HORA: {
-					case CB_GETDROPPEDSTATE: {
-						HWND hCBhora = GetDlgItem(hwnd, CB_ELIMINAR_HORA);
-						ComboBox_ResetContent(hCBhora);
-						HWND hDTPdia = GetDlgItem(hwnd, DTP_MEJOR_QUE_MONTHCALENDAR);					
-						SYSTEMTIME sysDia = { 0 };		double varDia;						
-						DateTime_GetSystemtime(hDTPdia, &sysDia);						
-						SystemTimeToVariantTime(&sysDia, &varDia);					
-						
-						crearTempListaCitaPorDia(ActiveVet, varDia);
-						NODOCITA* TempCita = TEMP_LISTACITA.Origen;
-						char buff[200]; SYSTEMTIME SysHora = { 0 };
+					switch HIWORD(wParam) {
+						case CBN_DROPDOWN: {
+							//Creación de la Lista de Citas Temporal
+							HWND hDTPdia = GetDlgItem(hwnd, DTP_MEJOR_QUE_MONTHCALENDAR);
+							HWND hCBhora = GetDlgItem(hwnd, CB_AGENDA_HORA);
+							ComboBox_ResetContent(hCBhora);
+							SYSTEMTIME SysDia = { 0 };          double VarDia;
+							SYSTEMTIME SysfechaActual = { 0 };  double fechaActual = 0;
+							DateTime_GetSystemtime(hDTPdia, &SysDia);
+							GetLocalTime(&SysfechaActual);
+							SystemTimeToVariantTime(&SysDia, &VarDia);
+							crearTempListaCitaPorDia(ActiveVet, VarDia);
+							SystemTimeToVariantTime(&SysfechaActual, &fechaActual);
+							NODOCITA* TempCita = TEMP_LISTACITA.Origen;
 
-						while (TempCita != NULL) {
-							VariantTimeToSystemTime(TempCita->Dato->varHora, &SysHora);
-							formatoHora(&SysHora, buff);
-							ComboBox_AddString(hCBhora, (LPARAM)buff);
-							TempCita = TempCita->Siguiente;
-						}
+							//Seteo del ComboBox
+							while (TempCita != NULL) {
+								if (TempCita->Dato->Fecha > fechaActual) {
+									ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->FormatHora);
+								}
+								TempCita = TempCita->Siguiente;
+							}
+						}break;
 					}break;
-						
+				}break;
+				case BTN_ACEPTAR_HORA: {
+					char GetHora[20];
+					HWND hCBhora = GetDlgItem(hwnd, CB_AGENDA_HORA);
+					HWND hDTPdia = GetDlgItem(hwnd, DTP_MEJOR_QUE_MONTHCALENDAR);
+					SYSTEMTIME SysDia = { 0 }; double VarDia;
+					DateTime_GetSystemtime(hDTPdia, &SysDia);
+					SystemTimeToVariantTime(&SysDia, &VarDia);
+					ComboBox_GetText(hCBhora, GetHora, 20);
+
+					if (buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia) != 0 || buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia) != NULL) {
+						SetDlgItemText(hwnd, EDIT_NOMBRE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->NombreCliente);
+						SetDlgItemInt(hwnd, EDIT_TEL, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Telefono, NULL);
+						SetDlgItemText(hwnd, EDIT_MASCOTA, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->NombreMascota);
+						SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->NombreMascota);
+						SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Estatus);
+						SetDlgItemText(hwnd, EDIT_MOTIVO, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Motivo);
+						SetDlgItemInt(hwnd, EDIT_PRECIO, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Costo, NULL);
+					}
+
 				}break;
 			}
 		}break;
@@ -259,55 +280,59 @@ LRESULT CALLBACK AgendaRangoCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 			switch (ID) {
 					// Casos de Agenda	
 				case CB_RANGO: {
-					case CB_GETDROPPEDSTATE: {
-						HWND hCBhora = GetDlgItem(hwnd, CB_RANGO);
-						ComboBox_ResetContent(hCBhora);
+					switch HIWORD(wParam) {
+						case CBN_DROPDOWN: {
+							HWND hCBhora = GetDlgItem(hwnd, CB_RANGO);
+							ComboBox_ResetContent(hCBhora);
 
-						HWND hDTPdia1 = GetDlgItem(hwnd, DTP_RANGO_DIA1);
-						HWND hDTPhora1 = GetDlgItem(hwnd, DTP_RANGO_HORA1);
-						HWND hDTPdia2 = GetDlgItem(hwnd, DTP_RANGO_DIA2);
-						HWND hDTPhora2 = GetDlgItem(hwnd, DTP_RANGO_HORA2);
-						SYSTEMTIME Dia1 = { 0 };		double dia1;
-						SYSTEMTIME Hora1 = { 0 };	    double hora1;
-						SYSTEMTIME Dia2 = { 0 };	    double dia2;
-						SYSTEMTIME Hora2 = { 0 };       double hora2;
-						DateTime_GetSystemtime(hDTPdia1, &Dia1);
-						DateTime_GetSystemtime(hDTPhora1, &Hora1);
-						DateTime_GetSystemtime(hDTPdia2, &Dia2);
-						DateTime_GetSystemtime(hDTPhora2, &Hora2);
-						SystemTimeToVariantTime(&Dia1, &dia1);
-						SystemTimeToVariantTime(&Hora1, &hora1);
-						SystemTimeToVariantTime(&Dia2, &dia2);
-						SystemTimeToVariantTime(&Hora2, &hora2);
-						double fecha1, fecha2;
-						fecha1 = ((int)dia1) + (hora1 - ((int)hora1));
-						fecha2 = ((int)dia2) + (hora2 - ((int)hora2));
+							HWND hDTPdia1	= GetDlgItem(hwnd, DTP_RANGO_DIA1);
+							HWND hDTPhora1  = GetDlgItem(hwnd, DTP_RANGO_HORA1);
+							HWND hDTPdia2   = GetDlgItem(hwnd, DTP_RANGO_DIA2);
+							HWND hDTPhora2  = GetDlgItem(hwnd, DTP_RANGO_HORA2);
+							SYSTEMTIME Dia1  = { 0 };		double dia1;
+							SYSTEMTIME Hora1 = { 0 };	    double hora1;
+							SYSTEMTIME Dia2  = { 0 };	    double dia2;
+							SYSTEMTIME Hora2 = { 0 };       double hora2;
+							DateTime_GetSystemtime(hDTPdia1,  &Dia1);
+							DateTime_GetSystemtime(hDTPhora1, &Hora1);
+							DateTime_GetSystemtime(hDTPdia2,  &Dia2);
+							DateTime_GetSystemtime(hDTPhora2, &Hora2);
+							SystemTimeToVariantTime(&Dia1,  &dia1);
+							SystemTimeToVariantTime(&Hora1, &hora1);
+							SystemTimeToVariantTime(&Dia2,  &dia2);
+							SystemTimeToVariantTime(&Hora2, &hora2);
+							double fecha1, fecha2;
+							fecha1 = ((int)dia1) + (hora1 - ((int)hora1));
+							fecha2 = ((int)dia2) + (hora2 - ((int)hora2));
 
-						crearTempListaCitaPorFechas(ActiveVet, fecha1, fecha2);
-						NODOCITA* TempCita = TEMP_LISTACITA.Origen;
-						char buff[200]; SYSTEMTIME SysHora = { 0 };
+							crearTempListaCitaPorFechas(ActiveVet, fecha1, fecha2);
+							NODOCITA* TempCita = TEMP_LISTACITA.Origen;
+							char buff[200]; SYSTEMTIME SysFechaCita = { 0 };
 
-						while (TempCita != NULL) {
-							VariantTimeToSystemTime(TempCita->Dato->varHora, &SysHora);
-							formatoHora(&SysHora, buff);
-							ComboBox_AddString(hCBhora, (LPARAM)buff);
-							TempCita = TempCita->Siguiente;
-						}
-						/*
-						char GetHora[20];
-						ComboBox_GetLBText(hCBhora, ComboBox_GetCurSel(hCBhora), (LPARAM)GetHora);
-						if (buscarCitaPorHora(ActiveVet, atof(GetHora)) != 0 || buscarCitaPorHora(ActiveVet, atof(GetHora)) != nullptr) {
-							SetDlgItemText(hwnd, EDIT_NOMBRE, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreCliente);
-							SetDlgItemInt(hwnd, EDIT_TEL, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Telefono, NULL);
-							SetDlgItemText(hwnd, EDIT_MASCOTA, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreMascota);
-							SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->NombreMascota);
-							SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Estatus);
-							SetDlgItemText(hwnd, EDIT_MOTIVO, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Motivo);
-							SetDlgItemInt(hwnd, EDIT_PRECIO, buscarCitaPorHora(ActiveVet, atof(GetHora))->Dato->Costo, NULL);
-						}
-						*/
-						
-					}break;
+							while (TempCita != NULL) {
+								VariantTimeToSystemTime(TempCita->Dato->Fecha, &SysFechaCita);
+								formatoFecha(&SysFechaCita, buff);
+								ComboBox_AddString(hCBhora, (LPARAM)buff);
+								TempCita = TempCita->Siguiente;
+							}
+						}break;
+					}					
+				}break;
+				case BTN_ACEPTAR_HORA: {
+					char GetFormatFecha[30];
+					HWND hCBhora = GetDlgItem(hwnd, CB_RANGO);
+					ComboBox_GetText(hCBhora, GetFormatFecha, 30);
+
+					if (buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha) != 0 || buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha) != NULL) {
+						SetDlgItemText(hwnd, EDIT_NOMBRE, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->NombreCliente);
+						SetDlgItemInt(hwnd, EDIT_TEL, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Telefono, NULL);
+						SetDlgItemText(hwnd, EDIT_MASCOTA, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->NombreMascota);
+						SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->NombreMascota);
+						SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Estatus);
+						SetDlgItemText(hwnd, EDIT_MOTIVO, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Motivo);
+						SetDlgItemInt(hwnd, EDIT_PRECIO, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Costo, NULL);
+					}
+
 				}break;
 			}
 		}break;
@@ -418,27 +443,6 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 		if (imagen != NULL)
 			SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
 
-		//Creación de la Lista de Citas Temporal
-		HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
-		HWND hCBhora = GetDlgItem(hwnd, CB_MODIFICAR_HORA);
-		ComboBox_ResetContent(hCBhora);
-		SYSTEMTIME SysDia = { 0 };          double VarDia;
-		SYSTEMTIME SysfechaActual = { 0 };  double fechaActual = 0;
-		DateTime_GetSystemtime(hDTPdia, &SysDia);
-		GetLocalTime(&SysfechaActual);
-		SystemTimeToVariantTime(&SysDia, &VarDia);
-		crearTempListaCitaPorDia(ActiveVet, VarDia);
-		SystemTimeToVariantTime(&SysfechaActual, &fechaActual);
-		NODOCITA* TempCita = TEMP_LISTACITA.Origen;
-
-		//Seteo del ComboBox
-		while (TempCita != NULL) {
-			if (TempCita->Dato->Fecha > fechaActual) {
-				ComboBox_AddString(hCBhora, (LPARAM)TempCita->Dato->FormatHora);
-			}
-			TempCita = TempCita->Siguiente;
-		}
-
 	}break;
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
@@ -446,10 +450,8 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 			return FALSE;
 		switch (ID) {
 			// Casos de Citas
-			case DTP_MODIFICAR_FECHA: {
-				// Ni siquiera entra a este case
-			}break;
 			case CB_MODIFICAR_HORA: {
+				switch HIWORD(wParam) {
 				case CBN_DROPDOWN: {
 					//Creación de la Lista de Citas Temporal
 					HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
@@ -471,6 +473,7 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 						}
 						TempCita = TempCita->Siguiente;
 					}
+				}break;
 				}break;
 			}break;
 			case BTN_ACEPTAR_HORA: {
@@ -899,6 +902,7 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	SYSTEMTIME diaCitas = { 0 };
 	SYSTEMTIME horaCitas = { 0 };
 	SYSTEMTIME horaBuff = { 0 };
+	SYSTEMTIME fechaBuff = { 0 };
 
 	GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName)+1);
 	GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota)+1);
@@ -920,7 +924,9 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	nuevo->varDia = (int)dia;
 	nuevo->varHora = (hora - (int)hora);
 	VariantTimeToSystemTime((hora - (int)hora), &horaBuff);
+	VariantTimeToSystemTime(fecha, &fechaBuff);
 	formatoHora(&horaBuff, nuevo->FormatHora);
+	formatoFecha(&fechaBuff, nuevo->FormatFecha);
 	strcpy_s(nuevo->NombreCliente, 100, Nombre);	
 	nuevo->Telefono = GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
 	strcpy_s(nuevo->Especie, 20, Especie);
@@ -930,7 +936,7 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	nuevo->Costo = atof(Precio); //Probar
 	return nuevo;
 }
-CITA* crearCitaDirecto(int ClaveVet, int Telefono, double Fecha, double varHora, double varDia,char* FormatHora,char* NombreCliente, char* Especie, char* NombreMascota, char* Motivo, char* Estatus, float Costo) {
+CITA* crearCitaDirecto(int ClaveVet, int Telefono, double Fecha, double varHora, double varDia, char* FormatHora, char* FormatFecha, char* NombreCliente, char* Especie, char* NombreMascota, char* Motivo, char* Estatus, float Costo) {
 
 //	fecha = ((int)dia) + (hora - ((int)hora));
 
@@ -941,7 +947,8 @@ CITA* crearCitaDirecto(int ClaveVet, int Telefono, double Fecha, double varHora,
 	nuevo->Fecha = Fecha;
 	nuevo->varHora = varHora;
 	nuevo->varDia = varDia;
-	strcpy_s(nuevo->FormatHora, 15, FormatHora); 
+	strcpy_s(nuevo->FormatHora, 15, FormatHora);
+	strcpy_s(nuevo->FormatFecha, 15, FormatFecha);
 	strcpy_s(nuevo->NombreCliente, 100, NombreCliente);
 	strcpy_s(nuevo->Especie, 20, Especie);
 	strcpy_s(nuevo->NombreMascota, 30, NombreMascota);
@@ -1177,6 +1184,20 @@ NODOCITA* buscarCitaPorFormatHora(int claveVet, char* hora, double dia) {
 	}
 	return NULL;
 }
+NODOCITA* buscarCitaPorFormatFecha(int claveVet, char* fecha) {
+	if (LISTACITA.Origen == NULL)
+		return NULL;
+	NODOCITA* indice = LISTACITA.Origen;
+
+	while (indice != NULL) {
+		if (strcmp(indice->Dato->FormatFecha, fecha)) {
+			return indice;
+			break;
+		}
+		indice = indice->Siguiente;
+	}
+	return NULL;
+}
 
 char* formatoHora(LPSYSTEMTIME Sys, char* buff) {
 
@@ -1223,6 +1244,55 @@ char* formatoHora(LPSYSTEMTIME Sys, char* buff) {
 		Sys->wMinute,
 		Sys->wSecond);
 	
+	return buff;
+}
+char* formatoFecha(LPSYSTEMTIME Sys, char* buff) {
+
+	std::string strMessage;
+
+	CString cstrMessage;
+
+	cstrMessage.Format(_T("%d-%02d-%02d %02d:%02d:%02d.%03d"),
+		Sys->wYear,
+		Sys->wMonth,
+		Sys->wDay,
+		Sys->wHour,
+		Sys->wMinute,
+		Sys->wSecond,
+		Sys->wMilliseconds);
+
+	strMessage = CT2A(cstrMessage.GetString());
+	std::cout << "System time = " << strMessage << std::endl;
+
+	std::ostringstream ossMessage;
+
+	/*  */
+
+	ossMessage
+		<< Sys->wYear << "-"
+		<< std::setw(2) << std::setfill('0') << Sys->wMonth << "-"
+		<< std::setw(2) << std::setfill('0') << Sys->wDay << " "
+		<< std::setw(2) << std::setfill('0') << Sys->wHour << ":"
+		<< std::setw(2) << std::setfill('0') << Sys->wMinute << ":"
+		<< std::setw(2) << std::setfill('0') << Sys->wSecond << "."
+		<< std::setw(3) << std::setfill('0') << Sys->wMilliseconds;
+
+	strMessage = ossMessage.str();
+	std::cout << "System time = " << strMessage << std::endl;
+
+	/**/
+
+	sprintf_s(buff,
+		100,
+		"%d-%02d-%02d %02d:%02d:%02d",
+		Sys->wYear,
+		Sys->wMonth,
+		Sys->wDay,
+		Sys->wHour,
+		Sys->wMinute,
+		Sys->wSecond,
+		Sys->wMilliseconds);
+
 	return buff;
 }
 
@@ -1403,7 +1473,7 @@ bool CargarCITABIN(CITA& listadeCitas) {
 
 		archivo.read(reinterpret_cast<char*>(&temp), sizeof(CITA));
 
-		agregarCitaFinal(crearCitaDirecto(temp.ClaveVet, temp.Telefono, temp.Fecha, temp.varHora, temp.varDia, temp.FormatHora , temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo, temp.Estatus, temp.Costo));
+		agregarCitaFinal(crearCitaDirecto(temp.ClaveVet, temp.Telefono, temp.Fecha, temp.varHora, temp.varDia, temp.FormatHora , temp.FormatFecha, temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo, temp.Estatus, temp.Costo));
 
 		lectura += sizeof(CITA);
 
