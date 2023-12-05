@@ -58,15 +58,21 @@ struct TEMP_CITAS {
 	NODOCITA* Fin;
 }TEMP_LISTACITA;
 
-HINSTANCE hInst;  // Instancia actual
-int ActiveVet = 000; // Veterinario actual (Bruh)
+HINSTANCE hInst;     // Instancia actual
+int ActiveVet = 0;   // Veterinario actual (Bruh)
+
+// Variables de redirección
+char RGetHora[30]  = { NULL };
+char RGetFecha[20] = { NULL };
+SYSTEMTIME RSysDia = { 0 };
 
 // Declaración de funciones
-LRESULT CALLBACK LoginCallback(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK AgendaDiaCallback(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK LoginCallback		(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK AgendaDiaCallback	(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK AgendaRangoCallback(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK CitasCallback(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK PerfilModCallback(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK CitasCrearCallback	(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK CitasModCallback	(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK PerfilModCallback	(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK PerfilCrearCallback(HWND, UINT, WPARAM, LPARAM);
 BOOL Menu(INT, HWND);
 
@@ -237,12 +243,30 @@ LRESULT CALLBACK AgendaDiaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 						SetDlgItemText(hwnd, EDIT_NOMBRE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->NombreCliente);
 						SetDlgItemInt(hwnd, EDIT_TEL, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Telefono, NULL);
 						SetDlgItemText(hwnd, EDIT_MASCOTA, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->NombreMascota);
-						SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->NombreMascota);
+						SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Especie);
 						SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Estatus);
 						SetDlgItemText(hwnd, EDIT_MOTIVO, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Motivo);
-						SetDlgItemInt(hwnd, EDIT_PRECIO, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Costo, NULL);
+						SetDlgItemText(hwnd, EDIT_PRECIO, std::to_string(buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Costo).c_str());
 					}
 
+				}break;
+				case BTN_AGENDA_MODIFICAR: {
+					HWND hCBhora = GetDlgItem(hwnd, CB_AGENDA_HORA);
+					HWND hDTPdia = GetDlgItem(hwnd, DTP_MEJOR_QUE_MONTHCALENDAR);
+					DateTime_GetSystemtime(hDTPdia, &RSysDia);
+					ComboBox_GetText(hCBhora, RGetHora, 20);
+					HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_MODIFICAR), NULL, CitasModCallback);
+					ShowWindow(window1, SW_SHOW);
+					DestroyWindow(hwnd);
+				}break;
+				case BTN_AGENDA_ELIMINAR: {
+					HWND hCBhora = GetDlgItem(hwnd, CB_AGENDA_HORA);
+					HWND hDTPdia = GetDlgItem(hwnd, DTP_MEJOR_QUE_MONTHCALENDAR);
+					DateTime_GetSystemtime(hDTPdia, &RSysDia);
+					ComboBox_GetText(hCBhora, RGetHora, 20);
+					HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_ELIMINAR), NULL, CitasModCallback);
+					ShowWindow(window1, SW_SHOW);
+					DestroyWindow(hwnd);
 				}break;
 			}
 		}break;
@@ -327,12 +351,26 @@ LRESULT CALLBACK AgendaRangoCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 						SetDlgItemText(hwnd, EDIT_NOMBRE, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->NombreCliente);
 						SetDlgItemInt(hwnd, EDIT_TEL, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Telefono, NULL);
 						SetDlgItemText(hwnd, EDIT_MASCOTA, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->NombreMascota);
-						SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->NombreMascota);
+						SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Especie);
 						SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Estatus);
 						SetDlgItemText(hwnd, EDIT_MOTIVO, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Motivo);
-						SetDlgItemInt(hwnd, EDIT_PRECIO, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Costo, NULL);
+						SetDlgItemText(hwnd, EDIT_PRECIO, std::to_string(buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Costo).c_str());
 					}
 
+				}break;
+				case BTN_AGENDA_MODIFICAR: {
+					HWND hCBfecha = GetDlgItem(hwnd, CB_RANGO);
+					ComboBox_GetText(hCBfecha, RGetFecha, 30);
+					HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_MODIFICAR), NULL, CitasModCallback);
+					ShowWindow(window1, SW_SHOW);
+					DestroyWindow(hwnd);
+				}break;
+				case BTN_AGENDA_ELIMINAR: {
+					HWND hCBfecha = GetDlgItem(hwnd, CB_RANGO);
+					ComboBox_GetText(hCBfecha, RGetFecha, 30);
+					HWND window1 = CreateDialog(hInst, MAKEINTRESOURCE(DLG_CITAS_MODIFICAR), NULL, CitasModCallback);
+					ShowWindow(window1, SW_SHOW);
+					DestroyWindow(hwnd);
 				}break;
 			}
 		}break;
@@ -443,6 +481,24 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 		if (imagen != NULL)
 			SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
 
+		//Setear DTP y CB si se redireccionó
+		HWND hDTPdia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
+		HWND hCBhora = GetDlgItem(hwnd, CB_MODIFICAR_HORA);
+		if (RGetHora[0] != NULL && RSysDia.wYear != 0) {
+			DateTime_SetSystemtime(hDTPdia, GDT_VALID, &RSysDia);
+			ComboBox_SetText(hCBhora, RGetHora);
+			RGetHora[0] = NULL;
+			RSysDia.wYear = 0;
+		}
+		else if (RGetFecha[0] != NULL) {
+			NODOCITA* RFecha = buscarCitaPorFormatFecha(ActiveVet, RGetFecha);
+			SYSTEMTIME SysDiaBuff = { 0 };
+			VariantTimeToSystemTime(RFecha->Dato->varDia, &SysDiaBuff);
+			DateTime_SetSystemtime(hDTPdia, GDT_VALID, &SysDiaBuff);
+			ComboBox_SetText(hCBhora, RFecha->Dato->FormatHora);
+			RGetFecha[0] = NULL;
+		}
+
 	}break;
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
@@ -489,10 +545,10 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 					SetDlgItemText(hwnd, EDIT_NOMBRE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->NombreCliente);
 					SetDlgItemInt(hwnd, EDIT_TEL, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Telefono, NULL);
 					SetDlgItemText(hwnd, EDIT_MASCOTA, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->NombreMascota);
-					SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->NombreMascota);
+					SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Especie);
 					SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Estatus);
 					SetDlgItemText(hwnd, EDIT_MOTIVO, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Motivo);
-					SetDlgItemInt(hwnd, EDIT_PRECIO, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Costo, NULL);
+					SetDlgItemText(hwnd, EDIT_PRECIO, std::to_string(buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Costo).c_str());
 				}
 
 			}break;
@@ -561,9 +617,9 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 					break;
 				}
 				else {
-					// Guardado de datos modificados
+					// Eliminación de datos
 					deleteCita(hwnd, ActiveVet);
-					MessageBox(NULL, "La cita ha sido Modificada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
+					MessageBox(NULL, "La cita ha sido eliminada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
 				}
 			}break;
 		}
@@ -883,6 +939,7 @@ void agregarVetFinal(VETERINARIO* dato) {
 		LISTAVET.Fin = nodo;		
 	}
 }
+
 CITA* crearCita(HWND hwnd, int claveVet){
 	HWND hDia = GetDlgItem(hwnd, DTP_CREAR_FECHA);
 	HWND hHora = GetDlgItem(hwnd, DTP_CREAR_HORA);
@@ -895,7 +952,7 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	HWND hMotivo = GetDlgItem(hwnd, EDIT_MOTIVO);
 
 	char Nombre[100], NombreMascota[30], Motivo[500], Especie[20], Estatus[20], Precio[10];
-	int Telefono = 0; float Costo = 0; 
+	float Costo = 0; 
 	double hora = 0;
 	double dia = 0;
 	double fecha = 0;
@@ -910,7 +967,7 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	GetDlgItemText(hwnd, EDIT_PRECIO, Precio, GetWindowTextLength(hPrecio)+1);
 	
 	ComboBox_GetText(hEspecie, Especie, GetWindowTextLength(hEspecie)+1);
-	ComboBox_GetText(hEspecie, Estatus, GetWindowTextLength(hStatus)+1);
+	ComboBox_GetText(hStatus, Estatus, GetWindowTextLength(hStatus)+1);
 	DateTime_GetSystemtime(hDia, &diaCitas);
 	DateTime_GetSystemtime(hHora, &horaCitas);
 	SystemTimeToVariantTime(&diaCitas, &dia);
@@ -983,7 +1040,7 @@ void modCita(HWND hwnd, int claveVet) {
 	GetDlgItemText(hwnd, EDIT_PRECIO, Precio, GetWindowTextLength(hPrecio) + 1);
 	
 	ComboBox_GetText(hEspecie, Especie, GetWindowTextLength(hEspecie) + 1);
-	ComboBox_GetText(hEspecie, Estatus, GetWindowTextLength(hStatus) + 1);
+	ComboBox_GetText(hStatus, Estatus, GetWindowTextLength(hStatus) + 1);
 	DateTime_GetSystemtime(hDia, &diaCitas);
 	SystemTimeToVariantTime(&diaCitas, &dia);
 
@@ -996,7 +1053,7 @@ void modCita(HWND hwnd, int claveVet) {
 	strcpy_s(original->Dato->NombreMascota, 30, NombreMascota);
 	strcpy_s(original->Dato->Motivo, 500, Motivo);
 	strcpy_s(original->Dato->Estatus, 20, Estatus);
-	original->Dato->Costo = atof(Precio); //Probar
+	original->Dato->Costo = atof(Precio);
 }
 void deleteCita(HWND hwnd, int claveVet) {
 	HWND hDia = GetDlgItem(hwnd, DTP_CREAR_FECHA);
@@ -1013,7 +1070,7 @@ void deleteCita(HWND hwnd, int claveVet) {
 	NODOCITA* nodo = buscarCitaPorFecha(claveVet, fecha);
 
 	// Extracción de la lista
-	if (nodo == LISTACITA.Origen && nodo == LISTACITA.Fin) {
+	if (nodo->Dato == LISTACITA.Origen->Dato && nodo->Dato == LISTACITA.Fin->Dato) {
 		LISTACITA.Origen = NULL;
 		LISTACITA.Fin = NULL;
 		delete(nodo);
@@ -1190,7 +1247,7 @@ NODOCITA* buscarCitaPorFormatFecha(int claveVet, char* fecha) {
 	NODOCITA* indice = LISTACITA.Origen;
 
 	while (indice != NULL) {
-		if (strcmp(indice->Dato->FormatFecha, fecha)) {
+		if (strcmp(indice->Dato->FormatFecha, fecha) == 0) {
 			return indice;
 			break;
 		}
