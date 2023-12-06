@@ -125,13 +125,13 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 	}
 
 
-	
+	/*
+	CargarCITABIN(LISTACITA);
+	*/
 	LISTACITA.Origen = NULL;
-
 	LISTACITA.Fin = NULL;
+
 	
-	
-	//CargarCITABIN(LISTACITA);
 
 	// Ventana y ciclo de mensajes
 	ShowWindow(hWindow, cShow);
@@ -398,6 +398,25 @@ LRESULT CALLBACK CitasCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 				LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE); 
 		if (imagen != NULL)
 				SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
+
+		//Combobox de especie
+		ifstream archivo("especies.txt"); 
+
+		if (archivo.is_open()) { 
+			string especie; 
+			HWND hCB_ESPECIE = GetDlgItem(hwnd, CB_ESPECIE); 
+			// Lee el archivo línea por línea y agrega cada especie al ComboBox
+			while (getline(archivo, especie)) { 
+				SendMessage(hCB_ESPECIE, CB_ADDSTRING, NULL, (LPARAM)especie.c_str()); 
+
+			}
+
+			// Cierra el archivo 
+			archivo.close(); 
+		}
+
+
+
 	}
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
@@ -473,6 +492,8 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 		SetDlgItemText(hwnd, EDIT_VET_CITA, busqueda->Dato->Nombre);
 		SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta);
 
+		
+
 		//Abrir imagen desde la ruta guardada
 		OPENFILENAME ofn;
 		ZeroMemory(&ofn, sizeof(ofn));
@@ -497,6 +518,21 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 			DateTime_SetSystemtime(hDTPdia, GDT_VALID, &SysDiaBuff);
 			ComboBox_SetText(hCBhora, RFecha->Dato->FormatHora);
 			RGetFecha[0] = NULL;
+		}
+		//Combobox de especie
+		ifstream archivo("especies.txt");
+
+		if (archivo.is_open()) {
+			string especie;
+			HWND hCB_ESPECIE = GetDlgItem(hwnd, CB_ESPECIE);
+			// Lee el archivo línea por línea y agrega cada especie al ComboBox
+			while (getline(archivo, especie)) {
+				SendMessage(hCB_ESPECIE, CB_ADDSTRING, NULL, (LPARAM)especie.c_str()); 
+
+			}
+
+			// Cierra el archivo
+			archivo.close(); 
 		}
 
 	}break;
@@ -1530,7 +1566,7 @@ bool CargarVETBIN(VETERINARIOS& listaVeterinarios) {
 	archivo.close();
 	return (lectura > 0);
 }
-bool CargarCITABIN(CITA& listadeCitas) {
+bool CargarCITABIN(CITAS& listadeCitas) {
 	ifstream archivo("Info de citas.bin", ios::binary);
 	if (!archivo.is_open()) {
 		MessageBox(NULL, "No se pudo abrir el archivo", "Error", MB_OK | MB_ICONERROR);
@@ -1545,11 +1581,11 @@ bool CargarCITABIN(CITA& listadeCitas) {
 	while (lectura < bytes) {
 		CITA temp;
 
-		archivo.read(reinterpret_cast<char*>(&temp), sizeof(CITA));
+		archivo.read(reinterpret_cast<char*>(&temp), sizeof(CITA)); 
 
 		agregarCitaFinal(crearCitaDirecto(temp.ClaveVet, temp.Telefono, temp.Fecha, temp.varHora, temp.varDia, temp.FormatHora , temp.FormatFecha, temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo, temp.Estatus, temp.Costo));
 
-		lectura += sizeof(CITA);
+		lectura += sizeof(CITA); 
 
 	}
 	archivo.close();
