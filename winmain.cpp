@@ -35,6 +35,7 @@ struct CITA {
 	double Fecha;
 	double varHora;
 	double varDia;
+	double Costo;
 	char FormatHora[15];
 	char FormatFecha[30];
 	char NombreCliente[100];	
@@ -42,7 +43,6 @@ struct CITA {
 	char NombreMascota[30];
 	char Motivo[500];
 	char Estatus[20];
-	float Costo;
 };
 struct NODOCITA {
 	CITA* Dato;
@@ -82,7 +82,8 @@ NODOVET* nuevoNodoVet(VETERINARIO*);
 void agregarVetFinal(VETERINARIO*);
 NODOVET* buscarPorClave(int);
 CITA* crearCita(HWND, int);
-CITA* crearCitaDirecto(int, int, double, double, double, char*, char*, char*, char*, char*, char*, char*, float);
+CITA* crearCitaDirecto(int, int, double, double, double, double, char*, char*, char*, char*, char*, char*, char*);
+void agregarCitaFinal(CITA*);
 void modCita(HWND, int);
 bool deleteCita(HWND, int);
 NODOCITA* nuevoNodoCita(CITA*);
@@ -94,7 +95,7 @@ NODOCITA* buscarCitaPorFormatHora(int, char*, double);
 NODOCITA* buscarCitaPorFormatFecha(int, char*);
 void crearTempListaCitaPorDia(int, double);
 void crearTempListaCitaPorFechas(int, double, double);
-void agregarCitaFinal(CITA*);
+void agregarCitaFinalTemp(CITA*);
 
 char* formatoHora(LPSYSTEMTIME, char*);
 char* formatoFecha(LPSYSTEMTIME, char*);
@@ -125,14 +126,11 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 	}
 
 
-	/*
-	CargarCITABIN(LISTACITA);
-	*/
-	LISTACITA.Origen = NULL;
-	LISTACITA.Fin = NULL;
-
+	if (!CargarCITABIN(LISTACITA)) {
+		LISTACITA.Origen = NULL;
+		LISTACITA.Fin = NULL;
+	}
 	
-
 	// Ventana y ciclo de mensajes
 	ShowWindow(hWindow, cShow);
 	while (GetMessage(&Msg, nullptr, NULL, NULL)) {
@@ -1042,7 +1040,7 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	nuevo->Costo = atof(Precio); //Probar
 	return nuevo;
 }
-CITA* crearCitaDirecto(int ClaveVet, int Telefono, double Fecha, double varHora, double varDia, char* FormatHora, char* FormatFecha, char* NombreCliente, char* Especie, char* NombreMascota, char* Motivo, char* Estatus, float Costo) {
+CITA* crearCitaDirecto(int ClaveVet, int Telefono, double Fecha, double varHora, double varDia, double Costo, char* FormatHora, char* FormatFecha, char* NombreCliente, char* Especie, char* NombreMascota, char* Motivo, char* Estatus) {
 
 //	fecha = ((int)dia) + (hora - ((int)hora));
 
@@ -1053,15 +1051,30 @@ CITA* crearCitaDirecto(int ClaveVet, int Telefono, double Fecha, double varHora,
 	nuevo->Fecha = Fecha;
 	nuevo->varHora = varHora;
 	nuevo->varDia = varDia;
+	nuevo->Costo = Costo;
 	strcpy_s(nuevo->FormatHora, 15, FormatHora);
-	strcpy_s(nuevo->FormatFecha, 15, FormatFecha);
+	strcpy_s(nuevo->FormatFecha, 30, FormatFecha);
 	strcpy_s(nuevo->NombreCliente, 100, NombreCliente);
 	strcpy_s(nuevo->Especie, 20, Especie);
 	strcpy_s(nuevo->NombreMascota, 30, NombreMascota);
 	strcpy_s(nuevo->Motivo, 500, Motivo);
 	strcpy_s(nuevo->Estatus, 20, Estatus);
-	nuevo->Costo = Costo;
 	return nuevo;
+}
+void agregarCitaFinal(CITA* dato) {
+	NODOCITA* nodo = nuevoNodoCita(dato);
+	if (LISTACITA.Origen == NULL) {
+		LISTACITA.Origen = nodo;
+		LISTACITA.Fin = nodo;
+		nodo->Siguiente = NULL;
+		nodo->Anterior = NULL;
+	}
+	else {
+		LISTACITA.Fin->Siguiente = nodo;
+		nodo->Anterior = LISTACITA.Fin;
+		nodo->Siguiente = NULL;
+		LISTACITA.Fin = nodo;
+	}
 }
 void modCita(HWND hwnd, int claveVet) {
 	HWND hDia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
@@ -1218,7 +1231,7 @@ void crearTempListaCitaPorDia(int claveVet, double dia) {
 			TEMP_LISTACITA.Fin = NULL;
 			while (indice != NULL) {
 				if ((int)indice->Dato->Fecha == (int)dia) {
-					agregarCitaFinal(indice->Dato);
+					agregarCitaFinalTemp(indice->Dato);
 				}
 				indice = indice->Siguiente;
 			}
@@ -1231,15 +1244,15 @@ void crearTempListaCitaPorFechas(int claveVet, double fecha1, double fecha2) {
 		TEMP_LISTACITA.Fin = NULL;
 		while (indice != NULL) {
 			if (indice->Dato->Fecha > fecha1 && indice->Dato->Fecha < fecha2) {
-				agregarCitaFinal(indice->Dato);
+				agregarCitaFinalTemp(indice->Dato);
 			}
 			indice = indice->Siguiente;
 		}
 	}
 }
-void agregarCitaFinal(CITA* dato) {
+void agregarCitaFinalTemp(CITA* dato) {
 	NODOCITA* nodo = nuevoNodoCita(dato);
-	if (LISTACITA.Origen == NULL) {
+	if (TEMP_LISTACITA.Origen == NULL) {
 		TEMP_LISTACITA.Origen = nodo;
 		TEMP_LISTACITA.Fin = nodo;
 		nodo->Siguiente = NULL;
@@ -1544,13 +1557,14 @@ void GuardarCITABIN() {
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->Fecha), sizeof(actual->Dato->Fecha));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->varHora), sizeof(actual->Dato->varHora));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->varDia), sizeof(actual->Dato->varDia));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Costo), sizeof(actual->Dato->Costo));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->FormatHora), sizeof(actual->Dato->FormatHora));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->FormatFecha), sizeof(actual->Dato->FormatFecha));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->NombreCliente), sizeof(actual->Dato->NombreCliente));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->Especie), sizeof(actual->Dato->Especie));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->NombreMascota), sizeof(actual->Dato->NombreMascota));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->Motivo), sizeof(actual->Dato->Motivo));
-		archivo.write(reinterpret_cast<char*>(&actual->Dato->Estatus), sizeof(actual->Dato->Estatus));
-		archivo.write(reinterpret_cast<char*>(&actual->Dato->Costo), sizeof(actual->Dato->Costo)); 
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Estatus), sizeof(actual->Dato->Estatus)); 
 		
 		actual = actual->Siguiente;
 	} 
@@ -1597,7 +1611,7 @@ bool CargarCITABIN(CITAS& listadeCitas) {
 
 		archivo.read(reinterpret_cast<char*>(&temp), sizeof(CITA)); 
 
-		agregarCitaFinal(crearCitaDirecto(temp.ClaveVet, temp.Telefono, temp.Fecha, temp.varHora, temp.varDia, temp.FormatHora , temp.FormatFecha, temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo, temp.Estatus, temp.Costo));
+		agregarCitaFinal(crearCitaDirecto(temp.ClaveVet, temp.Telefono, temp.Fecha, temp.varHora, temp.varDia, temp.Costo, temp.FormatHora , temp.FormatFecha, temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo, temp.Estatus));
 
 		lectura += sizeof(CITA); 
 
