@@ -84,7 +84,7 @@ NODOVET* buscarPorClave(int);
 CITA* crearCita(HWND, int);
 CITA* crearCitaDirecto(int, int, double, double, double, char*, char*, char*, char*, char*, char*, char*, float);
 void modCita(HWND, int);
-void deleteCita(HWND, int);
+bool deleteCita(HWND, int);
 NODOCITA* nuevoNodoCita(CITA*);
 NODOCITA* nuevoNodoCitaEXTRA(NODOCITA*);
 void agregarCita(CITA*);
@@ -619,7 +619,6 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 				else {
 					// Eliminación de datos
 					deleteCita(hwnd, ActiveVet);
-					MessageBox(NULL, "La cita ha sido eliminada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
 				}
 			}break;
 		}
@@ -1055,45 +1054,63 @@ void modCita(HWND hwnd, int claveVet) {
 	strcpy_s(original->Dato->Estatus, 20, Estatus);
 	original->Dato->Costo = atof(Precio);
 }
-void deleteCita(HWND hwnd, int claveVet) {
-	HWND hDia = GetDlgItem(hwnd, DTP_CREAR_FECHA);
-	HWND hHora = GetDlgItem(hwnd, DTP_CREAR_HORA);
-	double hora = 0, dia = 0, fecha = 0;
+bool deleteCita(HWND hwnd, int claveVet) {
+	HWND hDia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
+	HWND hCBhora = GetDlgItem(hwnd, CB_MODIFICAR_HORA);
+	char FormatHora[15];
+	double hora = 0, dia = 0;
 	SYSTEMTIME diaCitas = { 0 };
 	SYSTEMTIME horaCitas = { 0 };
+	GetDlgItemText(hwnd, CB_MODIFICAR_HORA, FormatHora, GetWindowTextLength(hCBhora) + 1);
 	DateTime_GetSystemtime(hDia, &diaCitas);
-	DateTime_GetSystemtime(hHora, &horaCitas);
 	SystemTimeToVariantTime(&diaCitas, &dia);
-	SystemTimeToVariantTime(&horaCitas, &hora);
-	fecha = ((int)dia) + (hora - ((int)hora));
 
-	NODOCITA* nodo = buscarCitaPorFecha(claveVet, fecha);
-
-	// Extracción de la lista
-	if (nodo->Dato == LISTACITA.Origen->Dato && nodo->Dato == LISTACITA.Fin->Dato) {
-		LISTACITA.Origen = NULL;
-		LISTACITA.Fin = NULL;
-		delete(nodo);
-	}
-	else if (nodo == LISTACITA.Origen) {
-		LISTACITA.Origen = nodo->Siguiente;
-		LISTACITA.Origen->Anterior = NULL;
-		nodo->Siguiente = NULL;
-		delete(nodo);
-	}
-	else if (nodo == LISTACITA.Fin) {
-		LISTACITA.Fin = nodo->Anterior;
-		LISTACITA.Fin->Siguiente = NULL;
-		nodo->Anterior = NULL;
-		delete(nodo);
+	if (FormatHora[0] != NULL) {
+		NODOCITA* nodo = buscarCitaPorFormatHora(claveVet, FormatHora, (int)dia);
+		if(nodo != nullptr){
+			// Extracción de la lista
+			if (nodo->Dato == LISTACITA.Origen->Dato && nodo->Dato == LISTACITA.Fin->Dato) {
+				LISTACITA.Origen = NULL;
+				LISTACITA.Fin = NULL;
+				delete(nodo);
+				MessageBox(NULL, "La cita ha sido eliminada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
+				return TRUE;
+			}
+			else if (nodo == LISTACITA.Origen) {
+				LISTACITA.Origen = nodo->Siguiente;
+				LISTACITA.Origen->Anterior = NULL;
+				nodo->Siguiente = NULL;
+				delete(nodo);
+				MessageBox(NULL, "La cita ha sido eliminada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
+				return TRUE;
+			}
+			else if (nodo == LISTACITA.Fin) {
+				LISTACITA.Fin = nodo->Anterior;
+				LISTACITA.Fin->Siguiente = NULL;
+				nodo->Anterior = NULL;
+				delete(nodo);
+				MessageBox(NULL, "La cita ha sido eliminada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
+				return TRUE;
+			}
+			else {
+				nodo->Anterior->Siguiente = nodo->Siguiente;
+				nodo->Siguiente->Anterior = nodo->Anterior;
+				nodo->Anterior = NULL;
+				nodo->Siguiente = NULL;
+				delete(nodo);
+				MessageBox(NULL, "La cita ha sido eliminada correctamente", "Cita:", MB_OK | MB_ICONINFORMATION);
+				return TRUE;
+			}
+		}
+		else{
+			MessageBox(NULL, "La cita seleccionada ya no existe", "Error al eliminar", MB_OK | MB_ICONERROR);
+			return FALSE;
+		}	
 	}
 	else {
-		nodo->Anterior->Siguiente = nodo->Siguiente;
-		nodo->Siguiente->Anterior = nodo->Anterior;
-		nodo->Anterior = NULL;
-		nodo->Siguiente = NULL;
-		delete(nodo);
-	}	
+		MessageBox(NULL, "No se ha seleccionado ninguna cita", "Error al eliminar", MB_OK | MB_ICONERROR);
+		return FALSE;
+	}
 }
 NODOCITA* nuevoNodoCita(CITA* dato) {
 	NODOCITA* nodo = new NODOCITA;

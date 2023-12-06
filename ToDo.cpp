@@ -1,7 +1,7 @@
 /*
  LOGIN
  - Cada médico puede ingresar con su clave de usuario y contraseña /HECHO
- - Un usuario administrador que pueda crear más cuentas /FALTA VALIDACION
+ - Un usuario administrador que pueda crear más cuentas /FALTA VALIDACION (No es necesario)
 
  MENU [Disponible en todas las pantallas]
  - Información de doctor que se conectó al programa /HECHO
