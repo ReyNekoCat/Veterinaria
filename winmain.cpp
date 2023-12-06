@@ -35,7 +35,7 @@ struct CITA {
 	double Fecha;
 	double varHora;
 	double varDia;
-	double Costo;
+	float Costo;
 	char FormatHora[15];
 	char FormatFecha[30];
 	char NombreCliente[100];	
@@ -82,7 +82,7 @@ NODOVET* nuevoNodoVet(VETERINARIO*);
 void agregarVetFinal(VETERINARIO*);
 NODOVET* buscarPorClave(int);
 CITA* crearCita(HWND, int);
-CITA* crearCitaDirecto(int, int, double, double, double, double, char*, char*, char*, char*, char*, char*, char*);
+CITA* crearCitaDirecto(int, int, double, double, double, float, char*, char*, char*, char*, char*, char*, char*);
 void agregarCitaFinal(CITA*);
 void modCita(HWND, int);
 bool deleteCita(HWND, int);
@@ -1037,10 +1037,10 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	strcpy_s(nuevo->NombreMascota, 30, NombreMascota);
 	strcpy_s(nuevo->Motivo, 500, Motivo);
 	strcpy_s(nuevo->Estatus, 20, Estatus);
-	nuevo->Costo = atof(Precio); //Probar
+	nuevo->Costo = atof(Precio);
 	return nuevo;
 }
-CITA* crearCitaDirecto(int ClaveVet, int Telefono, double Fecha, double varHora, double varDia, double Costo, char* FormatHora, char* FormatFecha, char* NombreCliente, char* Especie, char* NombreMascota, char* Motivo, char* Estatus) {
+CITA* crearCitaDirecto(int ClaveVet, int Telefono, double Fecha, double varHora, double varDia, float Costo, char* FormatHora, char* FormatFecha, char* NombreCliente, char* Especie, char* NombreMascota, char* Motivo, char* Estatus) {
 
 //	fecha = ((int)dia) + (hora - ((int)hora));
 
@@ -1606,7 +1606,7 @@ bool CargarCITABIN(CITAS& listadeCitas) {
 	archivo.seekg(0, ios::beg);
 
 	unsigned int lectura = 0;
-	while (lectura < bytes) {
+	while (lectura = bytes) {
 		CITA temp;
 
 		archivo.read(reinterpret_cast<char*>(&temp), sizeof(CITA)); 
