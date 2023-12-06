@@ -22,7 +22,7 @@
  - Fecha y hora
 	> Debe tener un formato libre /HECHO
 	> Evitar la creación con una fecha pasada /HECHO
-	> Evitar la modificación de citas pasadas 
+	> Evitar la modificación de citas pasadas /HECHO
 
  - Nombre del cliente (Dueño de la mascota) /HECHO
 
@@ -50,19 +50,19 @@
  - Estará en la ventana principal /HECHO
  - Visualizar las citas ordenadas de la más próxima a la más lejana /HECHO
  - Mostrar las citas de hoy en adelante (No mostrar las citas pasadas) /HECHO
- - Visualizar, modificar y eliminar cada cita (o redirigir a una sección para realizar estas acciones)
+ - Visualizar, modificar y eliminar cada cita (o redirigir a una sección para realizar estas acciones) /HECHO
  - En la vista de cada cita se debe mostrar toda la información, además de la cantidad a pagar /HECHO
- - Se debe agregar una pantalla para consultar citas en un rango de fechas
+ - Se debe agregar una pantalla para consultar citas en un rango de fechas /HECHO
 
  ABC [Altas/Bajas/Cambios]
- - Las citas deben darse de alta, de baja o cambiarse en cualquier momento 
-	> El proyecto debe tener las pantallas necesarias para realizar dichos cambios
-	> Todas estas operaciones deben ser realizadas sobre listas doblemente ligadas
- - Las bajas deben eliminar los nodos de la lista ligada
- - Citas ya pasadas en el tiempo, no se pueden modificar
- - Las altas son a través de la sección "Nueva cita"
- - Las bajas y cambios se deben realizar a través de la agenda
- - Todas las entidades deben guardar la clave del usuario que está registrando los datos
+ - Las citas deben darse de alta, de baja o cambiarse en cualquier momento /HECHO
+	> El proyecto debe tener las pantallas necesarias para realizar dichos cambios /HECHO
+	> Todas estas operaciones deben ser realizadas sobre listas doblemente ligadas /HECHO
+ - Las bajas deben eliminar los nodos de la lista ligada /HECHO
+ - Citas ya pasadas en el tiempo, no se pueden modificar /HECHO
+ - Las altas son a través de la sección "Nueva cita" /HECHO
+ - Las bajas y cambios se deben realizar a través de la agenda /HECHO
+ - Todas las entidades deben guardar la clave del usuario que está registrando los datos /HECHO
 
  SALIR
  - Guardar los datos de las listas doblemente ligadas enarchivos binarios
@@ -70,10 +70,10 @@
 	 > Con la información guardada, poblar las listas ligadas correspondientes
 
  ESTRUCTURA DE DATOS [Archivos Binarios]
- - Utilizar listas doblemente ligadas para el manejo de la información
- - Todas las entidades se deben de guardar en archivos binarios
- - Tener la lógica correcta para guardar los datos capturados en el programaen archivos binarios
+ - Utilizar listas doblemente ligadas para el manejo de la información /HECHO
+ - Todas las entidades se deben de guardar en archivos binarios /MASOMENOS
+ - Tener la lógica correcta para guardar los datos capturados en el programaen archivos binarios /MASOMENOS
 	 > La info se recupera desde este archivo para utilizarla en la aplicación
- - Uso de clases (propiedades y métodos) para el manejo de listas ligadas
+ - Uso de clases (propiedades y métodos) para el manejo de listas ligadas /HECHO
 
  */
