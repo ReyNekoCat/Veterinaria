@@ -1225,7 +1225,7 @@ void crearTempListaCitaPorFechas(int claveVet, double fecha1, double fecha2) {
 }
 void agregarCitaFinal(CITA* dato) {
 	NODOCITA* nodo = nuevoNodoCita(dato);
-	if (TEMP_LISTACITA.Origen == NULL) {
+	if (LISTACITA.Origen == NULL) {
 		TEMP_LISTACITA.Origen = nodo;
 		TEMP_LISTACITA.Fin = nodo;
 		nodo->Siguiente = NULL;
