@@ -400,23 +400,29 @@ LRESULT CALLBACK CitasCrearCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 				SendMessage(GetDlgItem(hwnd, PC_CITA_FOTO), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)imagen);
 
 		//Combobox de especie
-		ifstream archivo("especies.txt"); 
-
-		if (archivo.is_open()) { 
-			string especie; 
-			HWND hCB_ESPECIE = GetDlgItem(hwnd, CB_ESPECIE); 
+		ifstream archivo("especies.txt");
+		ifstream TXT("Estatus.txt");
+		if (archivo.is_open()) {
+			string especie;
+			HWND hCB_ESPECIE = GetDlgItem(hwnd, CB_ESPECIE);
 			// Lee el archivo línea por línea y agrega cada especie al ComboBox
-			while (getline(archivo, especie)) { 
-				SendMessage(hCB_ESPECIE, CB_ADDSTRING, NULL, (LPARAM)especie.c_str()); 
+			while (getline(archivo, especie)) {
+				SendMessage(hCB_ESPECIE, CB_ADDSTRING, NULL, (LPARAM)especie.c_str());
 
 			}
-
-			// Cierra el archivo 
-			archivo.close(); 
 		}
+		if (TXT.is_open()) {
+			string Estatus;
+			HWND hCB_Estatus = GetDlgItem(hwnd, CB_ESTATUS);
+			// Lee el archivo línea por línea y agrega cada especie al ComboBox
+			while (getline(TXT, Estatus)) {
+				SendMessage(hCB_Estatus, CB_ADDSTRING, NULL, (LPARAM)Estatus.c_str());
 
-
-
+			}
+		}
+		// Cierra el archivo
+		archivo.close();
+		TXT.close();
 	}
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
@@ -521,7 +527,7 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 		}
 		//Combobox de especie
 		ifstream archivo("especies.txt");
-
+		ifstream TXT("Estatus.txt");  
 		if (archivo.is_open()) {
 			string especie;
 			HWND hCB_ESPECIE = GetDlgItem(hwnd, CB_ESPECIE);
@@ -529,12 +535,20 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 			while (getline(archivo, especie)) {
 				SendMessage(hCB_ESPECIE, CB_ADDSTRING, NULL, (LPARAM)especie.c_str()); 
 
-			}
+			}			 
+		}	
+		if (TXT.is_open()) {  
+			string Estatus; 
+			HWND hCB_Estatus = GetDlgItem(hwnd, CB_ESTATUS); 
+			// Lee el archivo línea por línea y agrega cada especie al ComboBox
+			while (getline(TXT, Estatus)) {  
+				SendMessage(hCB_Estatus, CB_ADDSTRING, NULL, (LPARAM)Estatus.c_str());  
 
-			// Cierra el archivo
-			archivo.close(); 
+			}		
 		}
-
+		// Cierra el archivo
+		archivo.close();
+		TXT.close();
 	}break;
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
