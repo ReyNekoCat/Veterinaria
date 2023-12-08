@@ -30,7 +30,7 @@
 	> Solo números y tener exactamente 8, 10 o 12 caracteres. /HECHO
 
  - Especie de la mascota (perro, gato, lombriz...)
-	> Se debe seleccionar a través de un ComboBox
+	> Se debe seleccionar a través de un ComboBox /HECHO
 
  - Nombre de la mascota /HECHO
 	> Solo letras /HECHO
@@ -42,9 +42,9 @@
 	> Solo números y un sólo punto /HECHO
 
  - Estatus (Pendiente, Efectuada, Cancelada, etc.)
-	> Las citas pueden cancelarse o eliminarse antes de que sucedan
-		> Cancelada: Se puede seguir viendo con un estatus de "cancelada"
-		> Eliminada: Se libera la memoria y ya no se puede visualizar
+	> Las citas pueden cancelarse o eliminarse antes de que sucedan /HECHO
+		> Cancelada: Se puede seguir viendo con un estatus de "cancelada" /HECHO
+		> Eliminada: Se libera la memoria y ya no se puede visualizar /HECHO
 
  AGENDA [Visualizador principal de la app]
  - Estará en la ventana principal /HECHO
@@ -65,15 +65,15 @@
  - Todas las entidades deben guardar la clave del usuario que está registrando los datos /HECHO
 
  SALIR
- - Guardar los datos de las listas doblemente ligadas enarchivos binarios
- - Al iniciar, leer los archivos binarios
-	 > Con la información guardada, poblar las listas ligadas correspondientes
+ - Guardar los datos de las listas doblemente ligadas enarchivos binarios /HECHO
+ - Al iniciar, leer los archivos binarios /HECHO
+	 > Con la información guardada, poblar las listas ligadas correspondientes /HECHO
 
  ESTRUCTURA DE DATOS [Archivos Binarios]
  - Utilizar listas doblemente ligadas para el manejo de la información /HECHO
- - Todas las entidades se deben de guardar en archivos binarios /MASOMENOS
- - Tener la lógica correcta para guardar los datos capturados en el programaen archivos binarios /MASOMENOS
-	 > La info se recupera desde este archivo para utilizarla en la aplicación
+ - Todas las entidades se deben de guardar en archivos binarios /HECHO
+ - Tener la lógica correcta para guardar los datos capturados en el programaen archivos binarios /MHECHO
+	 > La info se recupera desde este archivo para utilizarla en la aplicación /HECHO
  - Uso de clases (propiedades y métodos) para el manejo de listas ligadas /HECHO
 
  */
