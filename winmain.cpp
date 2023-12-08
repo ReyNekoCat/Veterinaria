@@ -110,6 +110,15 @@ void GuardarCITABIN(void);
 bool CargarVETBIN(VETERINARIOS&);
 bool CargarCITABIN(CITAS&);
 
+template <typename T>
+std::string to_string_with_precision(const T a_value, const int n = 2)
+{
+	std::ostringstream out;
+	out.precision(n);
+	out << std::fixed << a_value;
+	return std::move(out).str();
+}
+
 // Función principal/Callbacks/Menu
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, INT cShow) {
 
@@ -244,7 +253,7 @@ LRESULT CALLBACK AgendaDiaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 						SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Especie);
 						SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Estatus);
 						SetDlgItemText(hwnd, EDIT_MOTIVO, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Motivo);
-						SetDlgItemText(hwnd, EDIT_PRECIO, std::to_string(buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Costo).c_str());
+						SetDlgItemText(hwnd, EDIT_PRECIO, to_string_with_precision(buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Costo).c_str());
 					}
 
 				}break;
@@ -352,7 +361,7 @@ LRESULT CALLBACK AgendaRangoCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 						SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Especie);
 						SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Estatus);
 						SetDlgItemText(hwnd, EDIT_MOTIVO, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Motivo);
-						SetDlgItemText(hwnd, EDIT_PRECIO, std::to_string(buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Costo).c_str());
+						SetDlgItemText(hwnd, EDIT_PRECIO, to_string_with_precision(buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Costo).c_str());
 					}
 
 				}break;
@@ -496,8 +505,6 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 		SetDlgItemText(hwnd, EDIT_VET_CITA, busqueda->Dato->Nombre);
 		SetDlgItemText(hwnd, EDIT_DIRECCION, busqueda->Dato->FotoRuta);
 
-		
-
 		//Abrir imagen desde la ruta guardada
 		OPENFILENAME ofn;
 		ZeroMemory(&ofn, sizeof(ofn));
@@ -596,7 +603,7 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 					SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Especie);
 					SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Estatus);
 					SetDlgItemText(hwnd, EDIT_MOTIVO, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Motivo);
-					SetDlgItemText(hwnd, EDIT_PRECIO, std::to_string(buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Costo).c_str());
+					SetDlgItemText(hwnd, EDIT_PRECIO, to_string_with_precision(buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Costo).c_str());
 				}
 
 			}break;
@@ -1606,7 +1613,7 @@ bool CargarCITABIN(CITAS& listadeCitas) {
 	archivo.seekg(0, ios::beg);
 
 	unsigned int lectura = 0;
-	while (lectura = bytes) {
+	while (lectura < bytes) {
 		CITA temp;
 
 		archivo.read(reinterpret_cast<char*>(&temp), sizeof(CITA)); 
