@@ -1499,26 +1499,30 @@ bool ValidarTelefono(const char* cTEL, int TELEFONO) {
 	return true;
 }
 bool ValidarPrecio(const char* cPRECIO, int PRECIO) {
-	if (PRECIO < 1) {
-		MessageBox(NULL, "Ingresa un precio valido", "Info", MB_OK | MB_ICONERROR); 
-		return false;
-	}
-	int Contador = 0;
 	for (int i = 0; cPRECIO[i] != '\0'; ++i) {
-		if (!isdigit(cPRECIO[i])&&cPRECIO[i]!=46) {
+		if (!isdigit(cPRECIO[i]) && cPRECIO[i] != 46) {
 			MessageBox(NULL, "No se aceptan valores negativos o caracteres extraños", "Info", MB_OK | MB_ICONERROR);
 			return false;
 		}
-		if(!isdigit(cPRECIO[i])) { 
-			Contador++;
-		}		
+		if (!isdigit(cPRECIO[i])|| cPRECIO[i] == '\0') {
+			if (cPRECIO[i+1] == 46||cPRECIO[i+2]==46) {
+				MessageBox(NULL, "Error, hay mas de dos puntos", "Info", MB_OK | MB_ICONERROR);
+				return false;
+			}
+			else if (cPRECIO[i + 3] == '\0') {
+
+			}
+			else {
+				MessageBox(NULL, "Solo se aceptan 2 decimales", "Info", MB_OK | MB_ICONERROR);
+				return false;
+			}
+		}
 	}
-	if (Contador!=0 && Contador != 1){
+	if (PRECIO<1||PRECIO>8) {
 		MessageBox(NULL, "Ingresa un precio valido", "Info", MB_OK | MB_ICONERROR);
 		return false;
 	}
-	return true;
-
+		return true;	
 }
 
 // Funciones para guardar/cargar archivos binarios
