@@ -31,11 +31,11 @@ struct VETERINARIOS {
 }LISTAVET;
 struct CITA {
 	int ClaveVet;
-	int Telefono;
+	float Costo;
 	double Fecha;
 	double varHora;
 	double varDia;
-	float Costo;
+	char Telefono[15];
 	char FormatHora[15];
 	char FormatFecha[30];
 	char NombreCliente[100];	
@@ -82,7 +82,7 @@ NODOVET* nuevoNodoVet(VETERINARIO*);
 void agregarVetFinal(VETERINARIO*);
 NODOVET* buscarPorClave(int);
 CITA* crearCita(HWND, int);
-CITA* crearCitaDirecto(int, int, double, double, double, float, char*, char*, char*, char*, char*, char*, char*);
+CITA* crearCitaDirecto(int, float, double, double, double, char*, char*, char*, char*, char*, char*, char*, char*);
 void agregarCitaFinal(CITA*);
 void modCita(HWND, int);
 bool deleteCita(HWND, int);
@@ -248,7 +248,7 @@ LRESULT CALLBACK AgendaDiaCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
 					if (buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia) != 0 || buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia) != NULL) {
 						SetDlgItemText(hwnd, EDIT_NOMBRE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->NombreCliente);
-						SetDlgItemInt(hwnd, EDIT_TEL, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Telefono, NULL);
+						SetDlgItemText(hwnd, EDIT_TEL, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Telefono);
 						SetDlgItemText(hwnd, EDIT_MASCOTA, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->NombreMascota);
 						SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Especie);
 						SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Estatus);
@@ -356,7 +356,7 @@ LRESULT CALLBACK AgendaRangoCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
 					if (buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha) != 0 || buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha) != NULL) {
 						SetDlgItemText(hwnd, EDIT_NOMBRE, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->NombreCliente);
-						SetDlgItemInt(hwnd, EDIT_TEL, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Telefono, NULL);
+						SetDlgItemText(hwnd, EDIT_TEL, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Telefono);
 						SetDlgItemText(hwnd, EDIT_MASCOTA, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->NombreMascota);
 						SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Especie);
 						SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorFormatFecha(ActiveVet, GetFormatFecha)->Dato->Estatus);
@@ -598,7 +598,7 @@ LRESULT CALLBACK CitasModCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
 				if (buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia) != 0 || buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia) != NULL) {
 					SetDlgItemText(hwnd, EDIT_NOMBRE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->NombreCliente);
-					SetDlgItemInt(hwnd, EDIT_TEL, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Telefono, NULL);
+					SetDlgItemText(hwnd, EDIT_TEL, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Telefono);
 					SetDlgItemText(hwnd, EDIT_MASCOTA, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->NombreMascota);
 					SetDlgItemText(hwnd, CB_ESPECIE, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Especie);
 					SetDlgItemText(hwnd, CB_ESTATUS, buscarCitaPorFormatHora(ActiveVet, GetHora, (int)VarDia)->Dato->Estatus);
@@ -1005,7 +1005,7 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	HWND hPrecio = GetDlgItem(hwnd, EDIT_PRECIO);
 	HWND hMotivo = GetDlgItem(hwnd, EDIT_MOTIVO);
 
-	char Nombre[100], NombreMascota[30], Motivo[500], Especie[20], Estatus[20], Precio[10];
+	char Telefono[15], Nombre[100], NombreMascota[30], Motivo[500], Especie[20], Estatus[20], Precio[10];
 	float Costo = 0; 
 	double hora = 0;
 	double dia = 0;
@@ -1016,6 +1016,7 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	SYSTEMTIME fechaBuff = { 0 };
 
 	GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName)+1);
+	GetDlgItemText(hwnd, EDIT_TEL, Telefono, GetWindowTextLength(hTel) + 1);
 	GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota)+1);
 	GetDlgItemText(hwnd, EDIT_MOTIVO, Motivo, GetWindowTextLength(hMotivo)+1);
 	GetDlgItemText(hwnd, EDIT_PRECIO, Precio, GetWindowTextLength(hPrecio)+1);
@@ -1031,34 +1032,34 @@ CITA* crearCita(HWND hwnd, int claveVet){
 	// Ingreso a la lista
 	CITA* nuevo = new CITA;
 	nuevo->ClaveVet = claveVet;
+	nuevo->Costo = atof(Precio);
 	nuevo->Fecha = fecha;
 	nuevo->varDia = (int)dia;
 	nuevo->varHora = (hora - (int)hora);
 	VariantTimeToSystemTime((hora - (int)hora), &horaBuff);
 	VariantTimeToSystemTime(fecha, &fechaBuff);
+	strcpy_s(nuevo->Telefono, 15, Telefono);
 	formatoHora(&horaBuff, nuevo->FormatHora);
 	formatoFecha(&fechaBuff, nuevo->FormatFecha);
 	strcpy_s(nuevo->NombreCliente, 100, Nombre);	
-	nuevo->Telefono = GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
 	strcpy_s(nuevo->Especie, 20, Especie);
 	strcpy_s(nuevo->NombreMascota, 30, NombreMascota);
 	strcpy_s(nuevo->Motivo, 500, Motivo);
 	strcpy_s(nuevo->Estatus, 20, Estatus);
-	nuevo->Costo = atof(Precio);
 	return nuevo;
 }
-CITA* crearCitaDirecto(int ClaveVet, int Telefono, double Fecha, double varHora, double varDia, float Costo, char* FormatHora, char* FormatFecha, char* NombreCliente, char* Especie, char* NombreMascota, char* Motivo, char* Estatus) {
+CITA* crearCitaDirecto(int ClaveVet, float Costo, double Fecha, double varHora, double varDia, char* Telefono, char* FormatHora, char* FormatFecha, char* NombreCliente, char* Especie, char* NombreMascota, char* Motivo, char* Estatus) {
 
 //	fecha = ((int)dia) + (hora - ((int)hora));
 
 	// Ingreso a la lista
 	CITA* nuevo = new CITA;
 	nuevo->ClaveVet = ClaveVet;
-	nuevo->Telefono = Telefono;
+	nuevo->Costo = Costo;
 	nuevo->Fecha = Fecha;
 	nuevo->varHora = varHora;
 	nuevo->varDia = varDia;
-	nuevo->Costo = Costo;
+	strcpy_s(nuevo->Telefono, 15, Telefono);
 	strcpy_s(nuevo->FormatHora, 15, FormatHora);
 	strcpy_s(nuevo->FormatFecha, 30, FormatFecha);
 	strcpy_s(nuevo->NombreCliente, 100, NombreCliente);
@@ -1094,7 +1095,7 @@ void modCita(HWND hwnd, int claveVet) {
 	HWND hPrecio = GetDlgItem(hwnd, EDIT_PRECIO);
 	HWND hMotivo = GetDlgItem(hwnd, EDIT_MOTIVO);
 
-	char FormatHora[15], Nombre[100], NombreMascota[30], Motivo[500], Especie[20], Estatus[20], Precio[10];
+	char Telefono[15], FormatHora[15], Nombre[100], NombreMascota[30], Motivo[500], Especie[20], Estatus[20], Precio[10];
 	float Costo = 0;
 	double hora = 0;
 	double dia = 0;
@@ -1104,6 +1105,7 @@ void modCita(HWND hwnd, int claveVet) {
 
 	GetDlgItemText(hwnd, CB_MODIFICAR_HORA, FormatHora, GetWindowTextLength(hCBhora) + 1);
 	GetDlgItemText(hwnd, EDIT_NOMBRE, Nombre, GetWindowTextLength(hName) + 1);
+	GetDlgItemText(hwnd, EDIT_TEL, Telefono, GetWindowTextLength(hTel) + 1);
 	GetDlgItemText(hwnd, EDIT_MASCOTA, NombreMascota, GetWindowTextLength(hMascota) + 1);
 	GetDlgItemText(hwnd, EDIT_MOTIVO, Motivo, GetWindowTextLength(hMotivo) + 1);
 	GetDlgItemText(hwnd, EDIT_PRECIO, Precio, GetWindowTextLength(hPrecio) + 1);
@@ -1116,13 +1118,13 @@ void modCita(HWND hwnd, int claveVet) {
 	NODOCITA* original = buscarCitaPorFormatHora(claveVet, FormatHora, (int)dia);
 
 	// Ingreso a la lista
+	original->Dato->Costo = atof(Precio);
+	strcpy_s(original->Dato->Telefono, 15, Telefono);
 	strcpy_s(original->Dato->NombreCliente, 100, Nombre);
-	original->Dato->Telefono = GetDlgItemInt(hwnd, EDIT_TEL, NULL, NULL);
 	strcpy_s(original->Dato->Especie, 20, Especie);
 	strcpy_s(original->Dato->NombreMascota, 30, NombreMascota);
 	strcpy_s(original->Dato->Motivo, 500, Motivo);
 	strcpy_s(original->Dato->Estatus, 20, Estatus);
-	original->Dato->Costo = atof(Precio);
 }
 bool deleteCita(HWND hwnd, int claveVet) {
 	HWND hDia = GetDlgItem(hwnd, DTP_MODIFICAR_FECHA);
@@ -1564,11 +1566,11 @@ void GuardarCITABIN() {
 		}
 
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->ClaveVet), sizeof(actual->Dato->ClaveVet));
-		archivo.write(reinterpret_cast<char*>(&actual->Dato->Telefono), sizeof(actual->Dato->Telefono));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Costo), sizeof(actual->Dato->Costo));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->Fecha), sizeof(actual->Dato->Fecha));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->varHora), sizeof(actual->Dato->varHora));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->varDia), sizeof(actual->Dato->varDia));
-		archivo.write(reinterpret_cast<char*>(&actual->Dato->Costo), sizeof(actual->Dato->Costo));
+		archivo.write(reinterpret_cast<char*>(&actual->Dato->Telefono), sizeof(actual->Dato->Telefono));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->FormatHora), sizeof(actual->Dato->FormatHora));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->FormatFecha), sizeof(actual->Dato->FormatFecha));
 		archivo.write(reinterpret_cast<char*>(&actual->Dato->NombreCliente), sizeof(actual->Dato->NombreCliente));
@@ -1622,7 +1624,7 @@ bool CargarCITABIN(CITAS& listadeCitas) {
 
 		archivo.read(reinterpret_cast<char*>(&temp), sizeof(CITA)); 
 
-		agregarCitaFinal(crearCitaDirecto(temp.ClaveVet, temp.Telefono, temp.Fecha, temp.varHora, temp.varDia, temp.Costo, temp.FormatHora , temp.FormatFecha, temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo, temp.Estatus));
+		agregarCitaFinal(crearCitaDirecto(temp.ClaveVet, temp.Costo, temp.Fecha, temp.varHora, temp.varDia, temp.Telefono, temp.FormatHora , temp.FormatFecha, temp.NombreCliente, temp.Especie, temp.NombreMascota, temp.Motivo, temp.Estatus));
 
 		lectura += sizeof(CITA); 
 
